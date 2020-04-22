@@ -25,7 +25,9 @@ def threshold(sample1,means,stds,thres,choose):
     """
     
     if sample1.ndim < 3:
-        sample1.reshape(sample1.shape[0],sample1.shape[1],1)
+        sample1 = sample1.reshape(sample1.shape[0],sample1.shape[1],1)
+        means = means.reshape(sample1.shape[1],1)
+        stds = stds.reshape(sample1.shape[1],1)
     
     sample2 = np.zeros(sample1.shape, dtype = int)
     
@@ -123,7 +125,9 @@ def fasterthreshold(sample1,means,stds,thres,ref,choose = "posneg"):
     sample2 : discretized tridimensional array 
     """
     if sample1.ndim < 3:
-        sample1.reshape(sample1.shape[0],sample1.shape[1],1)
+        sample1 = sample1.reshape(sample1.shape[0],sample1.shape[1],1)
+        means = means.reshape(sample1.shape[1],1)
+        stds = stds.reshape(sample1.shape[1],1)
         
     sample2 = np.zeros(sample1.shape, dtype = int)
     
@@ -560,7 +564,7 @@ def Thres(coef,x):
     return coef*np.median(np.abs(x)/0.6745) 
 
     
-def GaussianComparison(sample,n1,thres,n2 = 1):
+def GaussianComparison(sample,n1,std,thres,n2 = 1):
     """
     Compares the distribution of the amplitudes in one electrode with the best Fit Gaussian
     
@@ -570,14 +574,15 @@ def GaussianComparison(sample,n1,thres,n2 = 1):
     (n1,n2) : coordinates of the chosen electrode
     """
     if sample.ndim < 3:
-        sample.reshape(sample.shape[0],sample.shape[1],1)
+        sample = sample.reshape(sample.shape[0],sample.shape[1],1)
+        std = std.reshape(sample1.shape[1],1)
     
     fig = plt.figure()
 
     
     plt.title('Electrode in coordinates (%d,%d) [Array dimensions: 4x55] ' %(n1+1,n2+1), fontsize  ='xx-large')
 
-    sig = (sample[:,n1,n2] - np.mean(sample[:,n1,n2]))/np.std(sample[:,n1,n2]) # normalizes the signal by the SD
+    sig = (sample[:,n1,n2] - np.mean(sample[:,n1,n2]))/std[n1,n2] # normalizes the signal by the Threshold (std/median)
 
     bins = np.arange(-6,6, 0.1)
     a,b = np.histogram(sig, bins =bins , density = True)

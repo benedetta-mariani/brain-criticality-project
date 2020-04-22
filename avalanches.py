@@ -560,14 +560,14 @@ def Thres(coef,x):
     return coef*np.median(np.abs(x)/0.6745) 
 
     
-def GaussianComparison(sample,n1,n2, thres):
+def GaussianComparison(sample,n1,thres,n2 = 1):
     """
     Compares the distribution of the amplitudes in one electrode with the best Fit Gaussian
     
     Parameters
     --------
     sample : tridimensional array of the continuous data. Dimensions : temporal dim x spatial dim1 (x spatial dim2)
-    (n1,n2) : coordinates of the chosen array
+    (n1,n2) : coordinates of the chosen electrode
     """
     if sample.ndim < 3:
         sample.reshape(sample.shape[0],sample.shape[1],1)

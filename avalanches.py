@@ -204,7 +204,7 @@ def fasterthreshold(sample1,means,stds,thres,ref,choose = "posneg"):
 
 def findpeaks(sig, thres, choose):
     """
-    Finds peaks in a time series.
+    It finds peaks in a time series.
     Set eventual other constraints in the scipy.signal function find_peaks
     """
     sig2 = np.zeros(sig.shape, dtype = int)

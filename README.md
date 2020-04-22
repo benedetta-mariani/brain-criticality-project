@@ -8,7 +8,7 @@ matplotlib.pyplot
 
 powerlaw (https://github.com/jeffalstott/powerlaw)
 
-Functions:
+Functions needed:
 
 scipy.stats.percentileofscore
 

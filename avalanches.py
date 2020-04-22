@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import powerlaw as pwl
 from scipy.stats import percentileofscore
-import random
 from scipy.optimize import curve_fit
 from scipy.signal import find_peaks
 

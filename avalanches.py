@@ -8,6 +8,7 @@ from scipy.signal import find_peaks
 
 def threshold(sample1,means,stds,thres,choose):
     """ 
+    
     Detects as events the points of maximum excursion over a threshold, considering either positive and negative excursions or only negative. Differs from "Fasterthreshold" since here only the one largest maximum between two crossings of the mean assigns the final event time.
     
     Parameters

@@ -279,7 +279,7 @@ def binning(n, interv):
         
     n = np.asarray(n).reshape(int(len(n)/interv), interv)
     
-    new = np.sum(n,axis = 1)
+    new = np.array(np.sum(n,axis = 1),dtype = int)
     
     init = []
     end = []
@@ -289,15 +289,20 @@ def binning(n, interv):
     if prova[0] == True:
         init.append(0)
         
+    
+        
     for i in range(1,len(prova)):
     
         if prova[i-1] == False and prova[i] == True:
             init.append(i)
         if prova[i-1] == True and prova[i] == False:
             end.append(i)
+    
+    if prova[-1] == True:
+        end.append(len(prova)+1)
             
     avalanches = []
-    
+    print(len(init) == len(end))
     for s in range(len(init)):
         avalanches.append(new[init[s]:end[s]])
         
@@ -575,7 +580,7 @@ def picchibinned(sample1, interv):
             else:
                 newvec[l,s] = 0
     
-    n = np.zeros(len(newvec), dtype = int) 
+    n = np.zeros((len(newvec)), dtype = int) 
 
     n[np.array(np.sum(newvec, axis = 1), dtype = bool)] = 1
     

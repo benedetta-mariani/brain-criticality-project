@@ -2,13 +2,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 import powerlaw as pwl
 from scipy.stats import percentileofscore
+#import random
 from scipy.optimize import curve_fit
 from scipy.signal import find_peaks
 
 
 def threshold(sample1,means,stds,thres,choose):
-    """ 
     
+    """ 
+    (Slow. For faster thresholdings see next functions)
     Detects as events the points of maximum excursion over a threshold, considering either positive and negative excursions or only negative. Differs from "Fasterthreshold" since here only the one largest maximum between two crossings of the mean assigns the final event time.
     
     Parameters
@@ -23,8 +25,12 @@ def threshold(sample1,means,stds,thres,choose):
     --------
     sample2 : discretized tridimensional array 
     """
-    
-    if sample1.ndim < 3:
+    if sample1.ndim ==1:
+   
+        sample1 = sample1.reshape(sample1.shape[0],1,1)
+        means = means.reshape(1,1)
+        stds = stds.reshape(1,1)
+    if sample1.ndim ==2:
         sample1 = sample1.reshape(sample1.shape[0],sample1.shape[1],1)
         means = means.reshape(sample1.shape[1],1)
         stds = stds.reshape(sample1.shape[1],1)
@@ -69,7 +75,7 @@ def threshold(sample1,means,stds,thres,choose):
                         
         
     if choose == "neg":
-    
+        
         for i in range(sample1.shape[1]):
             for j in range(sample1.shape[2]):
                 if stds[i][j] > 0:
@@ -109,7 +115,7 @@ def threshold(sample1,means,stds,thres,choose):
 
 def fasterthreshold(sample1,means,stds,thres,ref,choose = "posneg"):
     """ 
-    Detects as events the points of maximum excursion over a threshold, considering either positive and negative excursions or only negative. Works without exceptions, but still is slow. For a really fast thresholding use findpeaks
+    Detects as events the points of maximum excursion over a threshold, considering either positive and negative excursions or only negative. Works without exceptions, but is still slow. For a really fast thresholding use findpeaks
     
     Parameters
     --------
@@ -205,7 +211,7 @@ def fasterthreshold(sample1,means,stds,thres,ref,choose = "posneg"):
 
 def findpeaks(sig, thres, choose):
     """
-    It finds peaks in a time series.
+    Finds peaks in a time series.
     Set eventual other constraints in the scipy.signal function find_peaks
     """
     sig2 = np.zeros(sig.shape, dtype = int)
@@ -273,23 +279,59 @@ def binning(n, interv):
         
     n = np.asarray(n).reshape(int(len(n)/interv), interv)
     
-    avalanches = []
-    avalanches.append([])
-
-    j = 0
-    for z in range(len(n)):
-        if np.any(n[z]):
-            avalanches[j].append(np.sum(n[z]))
-        else:
-            j = j + 1
-            avalanches.append([])
-     
+    new = np.sum(n,axis = 1)
+    
+    init = []
+    end = []
+ 
+    prova = new>0
+    
+    if prova[0] == True:
+        init.append(0)
+        
+    for i in range(1,len(prova)):
+    
+        if prova[i-1] == False and prova[i] == True:
+            init.append(i)
+        if prova[i-1] == True and prova[i] == False:
+            end.append(i)
             
-    for i in range(avalanches.count([])):
-        avalanches.remove([])
-
+    avalanches = []
+    
+    for s in range(len(init)):
+        avalanches.append(new[init[s]:end[s]])
+        
     return avalanches
+    
+    
+"""
+def binning(n,interv)
+    if len(n)%interv > 0:
 
+            add = (int(len(n)/interv) + 1)* interv - len(n)
+            n = n.tolist()
+            for i in range(add):
+                n = n + [0]
+
+        n = np.asarray(n).reshape(int(len(n)/interv), interv)
+
+
+        avalanches = []
+        avalanches.append([])
+        j = 0
+        for z in range(len(n)):
+            if np.any(n[z]):
+                avalanches[j].append(np.sum(n[z]))
+            else:
+                j = j + 1
+                avalanches.append([])
+
+
+        for i in range(avalanches.count([])):
+            avalanches.remove([])
+
+        return avalanches
+"""
 def draw(sample, xmin,xmax, model,ax= None,lim1 = 4,color = 'green'):
     """
     Fits the data contained in "sample" (i.e. sizes or durations of the avalanches) with the model chosen.
@@ -303,7 +345,7 @@ def draw(sample, xmin,xmax, model,ax= None,lim1 = 4,color = 'green'):
         
     ns = len(pwl.pdf(sample)[0])
     nbins = np.logspace(np.log10(min(sample)),np.log10(max(sample)),ns)
-    nbins = nbins.tolist()
+    
     ax.set_xscale('log')
     ypred = pwl.Fit(sample,xmin =(1,xmin + 1),xmax = xmax, parameter_range = {"alpha" : [1,lim1]},discrete = True)
     ax.hist(sample, density = True, histtype = 'bar',log = True,bins = nbins, color = color)
@@ -346,7 +388,7 @@ def disegno(sizess, durationss, xmins, xmind, boool, maxs ,maxd,lim1,lim2):
     
 
     nbins = np.logspace(np.log10(min(sizess)),np.log10(max(sizess)),ns)
-    nbins = nbins.tolist()
+    
    
     plt.hist(sizess, density = True, histtype = 'bar',log = True, bins = nbins,color = "green")
     pwl.plot_pdf(sizess, color='r', linewidth=2, label= 'pdf', linear_bins = False)
@@ -372,7 +414,7 @@ def disegno(sizess, durationss, xmins, xmind, boool, maxs ,maxd,lim1,lim2):
     print(ns,nd)
  
     nbins2 = np.logspace(np.log10(min(durationss)),np.log10(max(durationss)),nd)
-    nbins2 = nbins2.tolist()
+    
     plt.xlabel("Avalanche duration", fontsize = 'x-large')
     plt.ylabel("Probability density", fontsize = 'x-large')
     plt.hist(durationss,density = True, log = True, bins = nbins2)
@@ -467,17 +509,18 @@ def prediz(alpha, tau):
 
 def ypred(sample, xmin, xmax,lim):
     """
-    here xmin is a precise value, i. e. the best xmin previously selected by the fit
+    xmin = xmax in genere
     """
-    ypred = pwl.Fit(sample,xmin = (xmin,xmin + 1),xmax = xmax,parameter_range = {'alpha' : [1,lim]},discrete = True)
+    ypred = pwl.Fit(sample,xmin = (1,xmin + 1),xmax = xmax,parameter_range = {'alpha' : [1,lim]},discrete = True)
     return ypred
 
-def goodness(sample, xmin, xmax, Ds):
+def goodness(sample, xmin, xmax, Ds,lim):
  
-    predic = ypred(sample, xmin, xmax)
+    predic = ypred(sample, xmin, xmax,lim)
     alpha = predic.power_law.alpha
+    print(alpha)
     Dreal = predic.power_law.D
-    y = np.arange(100)
+    #y = np.arange(100)
     score = percentileofscore(Ds,Dreal)
     pval = 1-score/100.
     return pval
@@ -564,25 +607,24 @@ def Thres(coef,x):
     return coef*np.median(np.abs(x)/0.6745) 
 
     
-def GaussianComparison(sample,n1,std,thres,n2 = 1):
+def GaussianComparison(sample,n1,n2, thres):
     """
     Compares the distribution of the amplitudes in one electrode with the best Fit Gaussian
     
     Parameters
     --------
     sample : tridimensional array of the continuous data. Dimensions : temporal dim x spatial dim1 (x spatial dim2)
-    (n1,n2) : coordinates of the chosen electrode
+    (n1,n2) : coordinates of the chosen array
     """
     if sample.ndim < 3:
         sample = sample.reshape(sample.shape[0],sample.shape[1],1)
-        std = std.reshape(sample1.shape[1],1)
     
     fig = plt.figure()
 
     
     plt.title('Electrode in coordinates (%d,%d) [Array dimensions: 4x55] ' %(n1+1,n2+1), fontsize  ='xx-large')
 
-    sig = (sample[:,n1,n2] - np.mean(sample[:,n1,n2]))/std[n1,n2] # normalizes the signal by the Threshold (std/median)
+    sig = (sample[:,n1,n2] - np.mean(sample[:,n1,n2]))/np.std(sample[:,n1,n2]) # normalizes the signal by the SD
 
     bins = np.arange(-6,6, 0.1)
     a,b = np.histogram(sig, bins =bins , density = True)
@@ -593,8 +635,8 @@ def GaussianComparison(sample,n1,std,thres,n2 = 1):
     means = sum(x*y)/n                   
     sigma = sum(y*(x-means)**2)/n        
 
-    def gaus(x,x0,sig):
-        return 1/(np.sqrt(2*np.pi*sig**2))*np.e**(-(x-x0)**2/(2*sig**2))
+    def gaus(x,x0,sigm):
+        return 1/(np.sqrt(2*np.pi*sigm**2))*np.e**(-(x-x0)**2/(2*sigm**2))
 
     popt,pcov = curve_fit(gaus,x,y,p0=[means,sigma])
  

@@ -1,4 +1,4 @@
-Avalanches.py is a short module to detect events in time series of neuronal activity, plot Raster Plots and  calculate avalanches statistics.
+**Avalanches.py** is a short module to detect events in time series of neural activity, plot raster plots and  calculate avalanches statistics.
 
 It needs:
 

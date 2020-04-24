@@ -1,213 +1,267 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import powerlaw as pwl
-from scipy.stats import percentileofscore
-#import random
+from matplotlib import cm
+from statsmodels.regression import linear_model as sm
 from scipy.optimize import curve_fit
 from scipy.signal import find_peaks
+from scipy.stats import percentileofscore
 
-
-def threshold(sample1,means,stds,thres,choose):
-    
+def threshold(sample1,means,stds,thres,choose = "posneg", opz = "option1"):
     """ 
-    (Slow. For faster thresholdings see next functions)
-    Detects as events the points of maximum excursion over a threshold, considering either positive and negative excursions or only negative. Differs from "Fasterthreshold" since here only the one largest maximum between two crossings of the mean assigns the final event time.
+    Detects as events the points of maximum excursion over a threshold, considering either positive and negative excursions or only negative. if "option1" is selected, the one largest maximum between two crossings of the mean assigns the final event time.
+    For a faster thresholding use the function below findpeaks.
     
     Parameters
     --------
-    sample1 : tridimensional array (shape = temporal dim x spatial dim1 x  spatial dim2 ) of recorded voltages
-    means : bidimensional array (shape = spatial dim1 x spatial dim2 ) of the means of the signals
-    stds : bidimensional array (shape = spatial dim1 x spatial dim2 ) of the thresholds for each channel
+    sample1 : tri or bidimensional array of recorded voltages (or even single time series from one electrode) (shape = temporal dim x spatial dim1 (x  spatial dim2) ) 
+    means : array of the means of the signals (shape = spatial dim1 (x spatial dim2) ) 
+    stds : array of the thresholds for each channel (standard deviations/medians...) (shape = spatial dim1 (x spatial dim2)
     thres : multiplicative coefficent for the thresholds
+    #ref : refractory period. Minimum distance between consecutive events.
     choose : if "posneg" both positive and negative deflections are considered, if "neg" only negative
+    opz : if "option1" the one largest maximum between two crossings of the mean assigns the final event time, if "option2" an event is imply the point of maximum excursion over a threshold
     
     Returns
     --------
-    sample2 : discretized tridimensional array 
+    sample2 : discretized array with the initial shape 
     """
-    if sample1.ndim ==1:
-   
+    initshape = sample1.shape
+    
+    if sample1.ndim > 2:
+        sample1 = sample1.reshape(sample1.shape[0],-1)
+        means = means.reshape(-1,)
+        stds = stds.reshape(-1,)
+        
+        
+    if sample1.ndim == 1: # so this same code works even when considering a single time series
         sample1 = sample1.reshape(sample1.shape[0],1,1)
         means = means.reshape(1,1)
         stds = stds.reshape(1,1)
-    if sample1.ndim ==2:
-        sample1 = sample1.reshape(sample1.shape[0],sample1.shape[1],1)
-        means = means.reshape(sample1.shape[1],1)
-        stds = stds.reshape(sample1.shape[1],1)
-    
-    sample2 = np.zeros(sample1.shape, dtype = int)
-    
-
-    if choose == "posneg":
         
-
-        for i in range(sample1.shape[1]):
-            for j in range(sample1.shape[2]):
-                if stds[i][j] > 0:
-                    picchi = [[]]
-                    tempi = [[]]
-                    n = 0
-                    for z in range(sample1.shape[0]):
-                            if np.abs(sample1[z,i,j]- means[i][j]) >=  thres*stds[i][j]:
-                                picchi[n].append(np.abs(sample1[z,i,j]- means[i][j]))
-                                tempi[n].append(z)
-
-                            else:
-                                if z >0:
-                                    if np.sign(sample1[z,i,j]- means[i][j]) !=  np.sign(sample1[z-1,i,j]- means[i][j]): 
-
-                                        n = n + 1
-                                        picchi.append([])
-                                        tempi.append([])
-
-                    zeta = []       
-                    for k in range(picchi.count([])):
-                        picchi.remove([])
-                    for p in range(tempi.count([])):
-                        tempi.remove([])
-                    for l in range(len(picchi)):
-                        zeta.append(tempi[l][picchi[l].index(max(picchi[l]))])
-                    for r in range(len(sample1)):
-                        if r in zeta:
-                            sample2[r,i,j] = 1
-                        else:
-                            sample2[r,i,j] = 0         
-                        
-        
-    if choose == "neg":
-        
-        for i in range(sample1.shape[1]):
-            for j in range(sample1.shape[2]):
-                if stds[i][j] > 0:
-                    picchi = [[]]
-                    tempi = [[]]
-                    n = 0
-                    for z in range(sample1.shape[0]):
-                        if (sample1[z,i,j]- means[i][j]) <= - thres*stds[i][j]:
-                                picchi[n].append(np.abs(sample1[z,i,j]- means[i][j]))
-                                tempi[n].append(z)
-
-                      
-                        else:
-                            if z > 0:
-                                if np.sign(sample1[z ,i,j]- means[i][j]) !=  np.sign(sample1[z-1,i,j]- means[i][j]):
-                                    n = n + 1
-                                    picchi.append([])
-                                    tempi.append([])
-
-                    zeta = []       
-                    for k in range(picchi.count([])):
-                        picchi.remove([])
-                    for p in range(tempi.count([])):
-                        tempi.remove([])
-                    for l in range(len(picchi)):
-                     
-                        zeta.append(tempi[l][picchi[l].index(max(picchi[l]))])
-
-                    for r in range(sample1.shape[0]):
-                        if r in zeta:
-                            sample2[r,i,j] = 1
-                        else:
-                            sample2[r,i,j] = 0         
-
-            
-    return sample2
-
-def fasterthreshold(sample1,means,stds,thres,ref,choose = "posneg"):
-    """ 
-    Detects as events the points of maximum excursion over a threshold, considering either positive and negative excursions or only negative. Works without exceptions, but is still slow. For a really fast thresholding use findpeaks
+  
     
-    Parameters
-    --------
-    sample1 : tridimensional array (shape = temporal dim x spatial dim1 x  spatial dim2 ) of recorded voltages
-    means : bidimensional array (shape = spatial dim1 x spatial dim2 ) of the means of the signals
-    stds : bidimensional array (shape = spatial dim1 x spatial dim2 ) of the thresholds for each channel
-    thres : multiplicative coefficent for the thresholds
-    ref : refractory period. Minimum distance between consecutive events.
-    choose : if "posneg" both positive and negative deflections are considered, if "neg" only negative
-    
-    Returns
-    --------
-    sample2 : discretized tridimensional array 
-    """
-    if sample1.ndim < 3:
-        sample1 = sample1.reshape(sample1.shape[0],sample1.shape[1],1)
-        means = means.reshape(sample1.shape[1],1)
-        stds = stds.reshape(sample1.shape[1],1)
-        
-    sample2 = np.zeros(sample1.shape, dtype = int)
-    
-    if choose == "posneg":
+    if opz == "option1":
+        sample2 = np.zeros(sample1.shape, dtype = int)
+        if choose == "posneg":
 
-        for i in range(sample1.shape[1]):
-            for j in range(sample1.shape[2]):
-                picchi = [[]]
-                tempi = [[]]
-                n = 0
-                for z in range(sample1.shape[0]):
-                        if np.abs(sample1[z,i,j]- means[i][j]) >=  thres*stds[i][j] and stds[i][j] > 0:
-                            picchi[n].append(np.abs(sample1[z,i,j]- means[i][j]))
-                            tempi[n].append(z)
-                            if z + 1 < len(sample1):
+            for s in range(sample1.shape[1]):
+                if stds[s]>0:
+                    sig = sample1[:,s]
 
-                                if np.abs(sample1[z + 1,i,j]- means[i][j]) < thres*stds[i][j]:
-                                    n = n + 1
-                                    picchi.append([])
-                                    tempi.append([])
+                    stan = stds[s]
+                    tempi = np.arange(0,len(sig),1)
+                    prova = np.where(np.abs(sig - means[s]) >= thres*stan,True,False)
+                    changesign1 = np.where(np.sign(sig[:-1]-means[s]) !=np.sign(sig[1:]-means[s]), True,False).reshape(-1,)
+                    changesign = np.hstack((changesign1,False))
 
-                zeta = []       
-                for k in range(picchi.count([])):
-                    picchi.remove([])
-                for p in range(tempi.count([])):
-                    tempi.remove([])
-                for l in range(len(picchi)):
-                    if l != 0:
-                        if tempi[l][picchi[l].index(max(picchi[l]))] - tempi[l-1][picchi[l-1].index(max(picchi[l-1]))] > ref:
-                            zeta.append(tempi[l][picchi[l].index(max(picchi[l]))])
-                    else:
-                        zeta.append(tempi[l][picchi[l].index(max(picchi[l]))])
-                for r in range(sample1.shape[0]):
-                    if r in zeta:
-                        sample2[r,i,j] = 1
-                    else:
-                        sample2[r,i,j] = 0  
-                        
-    if choose == "neg":
-    
-        for i in range(sample1.shape[1]):
-            for j in range(sample1.shape[2]):
-                picchi = [[]]
-                tempi = [[]]
-                n = 0
-                for z in range(sample1.shape[0]):
-                        if (sample1[z,i,j]- means[i][j]) <= - thres*stds[i][j] and stds[i][j] > 0:
-                            picchi[n].append(np.abs(sample1[z,i,j]))
-                            tempi[n].append(z)
-                            if z + 1 < len(sample1):
+                    init = []
+                    end = []
 
-                                if (sample1[z + 1,i,j]- means[i][j]) > - thres*stds[i][j]: #check
-                                    n = n + 1
-                                    picchi.append([])
-                                    tempi.append([])
+                    termined = True
+                    started = False
 
-                zeta = []       
-                for k in range(picchi.count([])):
-                    picchi.remove([])
-                for p in range(tempi.count([])):
-                    tempi.remove([])
-                for l in range(len(picchi)):
-                    if l != 0:
-                        if tempi[l][picchi[l].index(max(picchi[l]))] - tempi[l-1][picchi[l-1].index(max(picchi[l-1]))] > ref:
-                            zeta.append(tempi[l][picchi[l].index(max(picchi[l]))])
-                    else:
-                        zeta.append(tempi[l][picchi[l].index(max(picchi[l]))])
-                for r in range(sample1.shape[0]):
-                    if r in zeta:
-                        sample2[r,i,j] = 1
-                    else:
-                        sample2[r,i,j] = 0         
-    
-    return sample2
+                    if prova[0] == True:
+                        init.append(0)
+                        termined = False
+                        started = True
+
+                    for i in range(1,len(prova)):
+
+                        if termined:
+
+                            if prova[i-1] == False and prova[i] == True:
+                                init.append(i)
+                                termined = False
+                                started = True
+
+
+                        if changesign[i] and started:
+
+                            end.append(i + 1)
+                            termined = True
+                            started = False
+
+
+
+
+                    if termined == False:
+                        end.append(len(prova)+1)
+
+
+                    groups = []
+                    times = []
+                    for l in range(len(init)):
+                        groups.append(np.abs(sig[init[l]:end[l]]-means[s]))
+
+                        times.append(tempi[init[l]:end[l]])
+
+                    zeta = []
+                    for m in range(len(groups)):
+                        zeta.append(times[m][groups[m].tolist().index(max(groups[m]))])
+
+                    sample2[zeta,s] = 1
+
+
+        if choose == "neg":
+
+            for s in range(sample1.shape[1]):
+                 if stds[s]>0:
+                    sig = sample1[:,s]
+
+                    stan = stds[s]
+                    tempi = np.arange(0,len(sig),1)
+                    prova = np.where((sig - means[s]) <= -thres*stan,True,False)
+                    changesign1 = np.where(np.sign(sig[:-1]-means[s]) !=np.sign(sig[1:]-means[s]), True,False).reshape(-1,)
+                    changesign = np.hstack((changesign1,False))
+
+                    init = []
+                    end = []
+
+                    termined = True
+                    started = False
+
+                    if prova[0] == True:
+                        init.append(0)
+                        termined = False
+                        started = True
+
+                    for i in range(1,len(prova)):
+
+                        if termined:
+
+                            if prova[i-1] == False and prova[i] == True:
+                                init.append(i)
+                                termined = False
+                                started = True
+
+
+                        if changesign[i] and started:
+
+                            end.append(i + 1)
+                            termined = True
+                            started = False
+
+
+
+
+                    if termined == False:
+                        end.append(len(prova)+1)
+
+
+                    groups = []
+                    times = []
+                    for l in range(len(init)):
+                        groups.append(np.abs(sig[init[l]:end[l]]-means[s]))
+
+                        times.append(tempi[init[l]:end[l]])
+
+                    zeta = []
+                    for m in range(len(groups)):
+                        zeta.append(times[m][groups[m].tolist().index(max(groups[m]))])
+
+                    sample2[zeta,s] = 1
+
+
+    if opz == "option2":
+        sample2 = np.zeros(sample1.shape, dtype = int)
+        if choose == "posneg":
+
+            for s in range(sample1.shape[1]):
+                if stds[s]>0:
+                    sig = sample1[:,s]
+
+                    stan = stds[s]
+                    tempi = np.arange(0,len(sig),1)
+                    prova = np.where(np.abs(sig - means[s]) >= thres*stan,True,False)
+
+                    init = []
+                    end = []
+                    termined = True
+
+                    if prova[0] == True:
+                        init.append(0)
+                        termined = False
+
+                    for i in range(1,len(prova)):
+
+                        if prova[i-1] == False and prova[i] == True:
+                            init.append(i)
+                            termined = False
+                        if (i+1) < len(prova):
+                            if prova[i] == True and prova[i+1] == False:
+
+                                end.append(i + 1)
+                                termined = True
+
+
+
+                    if termined == False:
+                        end.append(len(prova)+1)
+
+
+                    groups = []
+                    times = []
+                    for l in range(len(init)):
+                        groups.append(np.abs(sig[init[l]:end[l]]-means[s]))
+
+                        times.append(tempi[init[l]:end[l]])
+
+                    zeta = []
+                    for m in range(len(groups)):
+                        zeta.append(times[m][groups[m].tolist().index(max(groups[m]))])
+
+                    sample2[zeta,s] = 1
+
+
+        if choose == "neg":
+
+            for s in range(sample1.shape[1]):
+                if stds[s]>0:
+                    sig = sample1[:,s]
+
+                    stan = stds[s]
+                    tempi = np.arange(0,len(sig),1)
+                    prova = np.where((sig - means[s]) <= -thres*stan,True,False)
+
+                    init = []
+                    end = []
+                    termined = True
+
+                    if prova[0] == True:
+                        init.append(0)
+                        termined = False
+
+                    for i in range(1,len(prova)):
+
+                        if prova[i-1] == False and prova[i] == True:
+                            init.append(i)
+                            termined = False
+                        if (i+1) < len(prova):
+                            if prova[i] == True and prova[i+1] == False:
+                                end.append(i + 1)
+                                termined = True
+
+
+
+                    if termined == False:
+                        end.append(len(prova)+1)
+
+                    groups = []
+                    times = []
+                    for l in range(len(init)):
+                        groups.append(np.abs(sig[init[l]:end[l]]-means[s]))
+
+                        times.append(tempi[init[l]:end[l]])
+
+                    zeta = []
+                    for m in range(len(groups)):
+                        zeta.append(times[m][groups[m].tolist().index(max(groups[m]))])
+
+                    sample2[zeta,s] = 1
+
+    return sample2.reshape(initshape)
+
 
 def findpeaks(sig, thres, choose):
     """
@@ -250,9 +304,7 @@ def avinterv(n):
     --------
     avinterv : average inter event interval 
     """
-    
-    indici = np.arange(0,len(n),1)
-    idx = indici[np.array(n,dtype = bool)]
+    idx = np.where(n > 0)[0]
     intertempi = idx[1:] - idx[:-1] 
     avinterv = int(round(np.mean(intertempi)))
     return avinterv
@@ -302,7 +354,7 @@ def binning(n, interv):
         end.append(len(prova)+1)
             
     avalanches = []
-    print(len(init) == len(end))
+
     for s in range(len(init)):
         avalanches.append(new[init[s]:end[s]])
         
@@ -342,24 +394,30 @@ def draw(sample, xmin,xmax, model,ax= None,lim1 = 4,color = 'green'):
     Fits the data contained in "sample" (i.e. sizes or durations of the avalanches) with the model chosen.
     xmin : the maximum xmin that can be considered in the power law fit.
     lim1 : upper limit of the range in which to search the power law parameter
-    ax = object returned by fig.add_subplot()
+    ax = object of the type AxesSubplot (returned by fig.add_subplot())
     """
+    ypred = pwl.Fit(sample,xmin =(1,xmin + 1),xmax = xmax, parameter_range = {"alpha" : [1,lim1]},discrete = True)
+    new = []
+    for i in range(len(sample)):
+        if sample[i] >= ypred.xmin:
+            new.append(sample[i])
+    
     if ax == None:
         fig = plt.figure()
         ax = fig.add_subplot(1,1,1)
         
-    ns = len(pwl.pdf(sample)[0])
-    nbins = np.logspace(np.log10(min(sample)),np.log10(max(sample)),ns)
+    ns = len(pwl.pdf(new)[0])
+    nbins = np.logspace(np.log10(min(new)),np.log10(max(new)),ns)
     
     ax.set_xscale('log')
-    ypred = pwl.Fit(sample,xmin =(1,xmin + 1),xmax = xmax, parameter_range = {"alpha" : [1,lim1]},discrete = True)
-    ax.hist(sample, density = True, histtype = 'bar',log = True,bins = nbins, color = color)
-    pwl.plot_pdf(sample, color='r', linewidth=2, label='pdf', linear_bins = False)
+    
+    ax.hist(new, density = True, histtype = 'bar',log = True,bins = nbins, color = color)
+    pwl.plot_pdf(new, color='r', linewidth=2, label='pdf', linear_bins = False)
     
     if model == 'power_law':
         ypred.power_law.plot_pdf( color='blue', linestyle='-', linewidth=2, label='Power Law fit')
         print(ypred.distribution_compare('power_law', 'exponential', normalized_ratio = True))
-        print('Parameters are (alpha)',ypred.power_law.alpha)
+        print('Parameters are (alpha)',ypred.power_law.alpha, 'xmin',ypred.power_law.xmin)
     elif model == 'lognormal':
         ypred.lognormal.plot_pdf( color='blue', linestyle='-', linewidth=2, label='Lognormal fit')
         print('Parameters are (mu,sigma)',ypred.lognormal.mu,'and',ypred.lognormal.sigma)
@@ -473,24 +531,14 @@ def RasterPlot(sample, av):
     plt.xticks(fontsize = 'large')
     plt.yticks(fontsize = 'large')
     
-def xminn(sample,xmin,xmax,lim):
-    ypred = pwl.Fit(sample, xmin = (1,xmin+1),xmax = xmax, parameter_range = {'alpha' : [1.,lim]}, discrete = True)
-    return ypred.power_law.xmin
-    
-def esponente(sample,xmin, boool,lim):
-    ypred = pwl.Fit(sample,xmin = (1,xmin + 1),xmax = max(sample), parameter_range = {'alpha': [1,lim]}, discrete = boool)
-    return ypred.power_law.alpha, ypred.power_law.sigma
 
 
 def intertempi(n): 
-    
-    indici = np.arange(0,len(n),1)
-    idx = indici[np.array(n,dtype = bool)]
-  
+    idx = np.where(n > 0)[0]
     intertempi = idx[1:] - idx[:-1] 
     return intertempi
 
-def scaling(sizess, durationss):
+def sgivent(sizess, durationss):
     tot = [durationss,sizess]
 
     numdur = np.sort(list(set(durationss)))
@@ -501,18 +549,145 @@ def scaling(sizess, durationss):
                 sdit[i].append(tot[1][z])
     medie = []
     std = []
-    num = []
+
     for i in range(len(sdit)):
         medie.append(np.mean(sdit[i]))
         std.append(np.std(sdit[i])/np.sqrt(len(sdit[i])))
-        num.append(len(sdit[i]))
         
-    return numdur, medie,std, num
+    return numdur,medie,std
 
-def prediz(alpha, tau):
-    return (alpha - 1)/(tau - 1)
+def delta(alpha, salpha, tau, stau):
+    return (alpha - 1)/(tau -1), np.sqrt((1/(tau -1))**2*salpha**2+ ((1-alpha)/(tau -1)**2)**2*stau**2)
 
-def ypred(sample, xmin, xmax,lim):
+
+def scaling(sizes, durations, tau = "default", errtau = "default", alpha = "default", erralpha = "default", maxxminsizes = "default", maxxmindur = "default", xmaxsizes = "default", xmaxdur = "default", lim1 = 4 , lim2 = 4):
+    
+
+    if maxxminsizes ==  "default":
+        maxxminsizes = max(sizes)
+    if xmaxsizes ==  "default":
+        xmax = max(sizes)
+
+    
+    if maxxmindur ==  "default":
+        maxxmindur = max(durations)
+    if xmaxdur ==  "default":
+        xmaxdur = max(durations)
+    
+    
+    if tau == "default" and errtau == "default":
+        tau,errtau = esponente(sizes,maxxmin = maxxminsizes,xmax =xmaxsizes,lim = lim1)
+        
+    if alpha == "default" and erralpha == "default":
+        alpha,erralpha = esponente(durations,maxxmin = maxxmindur,xmax =xmaxdur,lim = lim2)
+
+    
+    pred =  delta(alpha, erralpha, tau, errtau )[0]
+    errpred = delta(alpha, erralpha,tau, errtau)[1]
+
+
+    xmin1 = xminn(sizes, maxxminsizes,xmaxsizes,lim1)
+    xmin2 = xminn(durations, maxxmindur,xmaxdur,lim2)
+    prova = np.array([np.asarray(sizes), np.asarray(durations)])
+    prova = prova.transpose()
+    prova2 = [0 for i in range(len(prova))]
+    
+    for r in range(len(prova)):
+        if prova[r][0] < xmin1 or prova[r][1] < xmin2 :
+            prova2[r] = False
+        else:
+            prova2[r] = True
+            
+    new = prova[prova2]
+    
+    a,b,c = sgivent(new[:,0],new[:,1])
+    x = np.hstack((np.log10(a).reshape(-1,1), np.ones(len(a)).reshape(-1,1)))
+    
+    y = np.log10(b).reshape(-1,1)
+
+    ols = sm.OLS(y,x)
+
+    ols_result = ols.fit()
+    
+    fit = ols_result.params[0]
+    errfit = ols_result.bse[0]
+    inter =ols_result.params[1]
+
+    grays = cm.Greys(np.linspace(0,1,15))
+    reds = cm.Reds(np.linspace(0,1,15))
+    greens = cm.Greens(np.linspace(0,1,15))
+    blues = cm.Blues(np.linspace(0,1,30))
+
+    nott = [0 for i in range(len(prova))]
+    for r in range(len(prova)):
+        if prova[r][0] < xmin1 or prova[r][1] < xmin2 :
+
+            nott[r] = True
+        else:
+
+            nott[r] = False
+
+    print('Prediction from crackling noise relation: delta = ',pred, '+-', errpred)
+    print('Fit from of average size given duration points: delta = ',fit, '+-', errfit)
+    
+    plt.figure(figsize = (6,4))
+ 
+
+    plt.xscale('log')
+    plt.yscale('log')
+    
+    x = np.arange(xmin2,max(durations))
+
+    plt.plot(durations, sizes, '.', color = blues[15],alpha = 0.3)
+    plt.plot(np.asarray(durations)[nott],np.asarray(sizes)[nott], '.', color = 'gray')
+    
+    plt.plot(x, (10**inter)*x**pred, 'r', label = 'Prediction', lw = 1.5)
+
+    plt.plot(x, (10**inter)*x**fit, color = greens[12], label = 'Fit', lw = 1.5)
+
+ 
+
+    plt.fill_between(x,(10**(errfit*-3))*(10**inter)*x**fit,
+                     (10**(errfit*3))*(10**inter)*x**fit,color= greens[5],lw=0)
+    
+    
+    plt.fill_between(x,(10**(errpred*-3))*(10**inter)*x**pred,
+                     (10**(errpred*+3))*(10**inter)*x**pred,color= reds[5],lw=0)
+
+    plt.xlabel('Durations', fontsize = 'xx-large')
+    plt.ylabel('Sizes',fontsize = 'xx-large')
+
+
+
+    plt.xticks(fontsize = 'xx-large')
+    plt.yticks(fontsize = 'xx-large')
+    legend = plt.legend(fontsize = 'xx-large')
+
+    plt.errorbar(a,b,yerr = c, fmt = 'o', color = blues[29],markersize = 3.5,barsabove = False,capsize = 3, elinewidth = 3,capthick = 1)
+    
+
+def xminn(sample,maxxmin = "default",xmax = "default",lim = 4):
+    if maxxmin ==  "default":
+        maxxmin = max(sample)
+    if xmax ==  "default":
+        xmax = max(sample)
+  
+    ypred = pwl.Fit(sample, xmin = (1,maxxmin+1),xmax = xmax, parameter_range = {'alpha' : [1.,lim]}, discrete = True)
+    return ypred.power_law.xmin
+    
+
+def esponente(sample,maxxmin = "default",xmax = "default",lim = "default"):
+    if maxxmin ==  "default":
+        maxxmin = max(sample)
+    if xmax ==  "default":
+        xmax = max(sample)
+    if lim ==  "default":
+        lim = 4
+        
+    ypred = pwl.Fit(sample,xmin = (1,maxxmin + 1),xmax = xmax, parameter_range = {'alpha': [1,lim]}, discrete = True)
+    return ypred.power_law.alpha, ypred.power_law.sigma
+
+def ypred(sample, xmin, xmax,lim = 4):
     """
     xmin = xmax in genere
     """
@@ -574,7 +749,7 @@ def picchibinned(sample1, interv):
 
     
     for s in range(len(sample1[0])):
-        for l in range(len(prova[:,:,s])):
+        for l in range(len(prova)):
             if np.any(prova[l,:,s]):
                 newvec[l,s] = 1
             else:
@@ -662,6 +837,3 @@ def GaussianComparison(sample,n1,n2, thres):
     plt.yscale('log')
     plt.legend( fontsize = 'xx-large')
 
-
-
-    

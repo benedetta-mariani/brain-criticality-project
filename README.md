@@ -31,10 +31,11 @@ Functions needed:
 
 ```
 sizes, lifetimes = main(dataset,interv)
-plt.figure()
-pwl.plot_pdf(sizes, color='r', linewidth=2, label='pdf', linear_bins = False)
-plt.figure()
-pwl.plot_pdf(lifetimes, color='b', linewidth=2, label='pdf', linear_bins = False)
+fig = plt.figure(figsize = (13,4))
+ax1 = fig.add_subplot(1,2,1)
+pwl.plot_pdf(sizes, color='r', linewidth=2, label='pdf', linear_bins = False,ax = ax1)
+ax2 = fig.add_subplot(1,2,2)
+pwl.plot_pdf(durations, color='b', linewidth=2, label='pdf', linear_bins = False,ax = ax2)
 ```
    where ```dataset``` in a tri/bidimensional array (temporal dim x spatial dims) of discretized signals and ```interv``` is the width of the chosen temporal bin to bin the data.
    

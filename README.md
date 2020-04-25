@@ -37,6 +37,6 @@ pwl.plot_pdf(sizes, color='r', linewidth=2, label='pdf', linear_bins = False,ax 
 ax2 = fig.add_subplot(1,2,2)
 pwl.plot_pdf(durations, color='b', linewidth=2, label='pdf', linear_bins = False,ax = ax2)
 ```
-   where ```dataset``` in a tri/bidimensional array (temporal dim x spatial dims) of discretized signals and ```interv``` is the width of the chosen temporal bin to bin the data.
+   where ```dataset``` is a tri/bidimensional array (shape = temporal dim x spatial dims) of discretized signals and ```interv``` is the width of the chosen temporal bin to bin the data.
    
 - Detailed instructions in the tutorial notebook

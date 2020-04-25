@@ -26,7 +26,7 @@ Functions needed:
 
 ```from avalanches import * ```
 
-- to detect avalanches and plot their size and lifetime distribution simply run
+- to detect avalanches and plot their sizes and lifetimes distributions simply run
 
 ```sizes, lifetimes = main(dataset,interv)
    ypred = pwl.Fit(sample,xmin =(1,xmin + 1),xmax = xmax, parameter_range = {"alpha" : [1,lim1]},discrete = True)

@@ -36,6 +36,6 @@ pwl.plot_pdf(sizes, color='r', linewidth=2, label='pdf', linear_bins = False)
 plt.figure()
 pwl.plot_pdf(lifetimes, color='b', linewidth=2, label='pdf', linear_bins = False)
 ```
-   where ```dataset``` in a tri/bidimensional arrya (temporal dim x spatial dim) of discretized signal and ```interv``` is the width of the chosen temporal bin to bin the data.
+   where ```dataset``` in a tri/bidimensional array (temporal dim x spatial dims) of discretized signals and ```interv``` is the width of the chosen temporal bin to bin the data.
    
 - Detailed instructions in the tutorial notebook

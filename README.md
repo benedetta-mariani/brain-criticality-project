@@ -22,7 +22,7 @@ Other functions needed:
 
 - scipy.signal.find_peaks
 
-- statsmodels.regression import linear_model
+- statsmodels.regression.linear_model
 
 ## to use it: 
 

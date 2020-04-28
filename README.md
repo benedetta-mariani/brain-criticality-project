@@ -1,18 +1,39 @@
-Avalanches.py is a short module to detect events in time series of neuronal activity, plot Raster Plots and  calculate avalanches statistics.
-
-It needs:
-
-numpy
-
-matplotlib.pyplot
-
-powerlaw (https://github.com/jeffalstott/powerlaw)
+# Avalanches.py 
+is a short module to detect events in time series of neural activity, plot raster plots and  calculate avalanches statistics.
 
 
-Functions needed:
+## Setup:
 
-scipy.stats.percentileofscore
+- get the module
 
-scipy.optimize.curve_fit
+Packages needed:
 
-scipy.signal.find_peaks
+- numpy
+
+- matplotlib.pyplot
+
+- powerlaw (https://github.com/jeffalstott/powerlaw)
+
+
+Other functions needed:
+- scipy.stats.percentileofscore
+
+- scipy.optimize.curve_fit
+
+- scipy.signal.find_peaks
+
+- statsmodels.regression.linear_model
+
+## to use it: 
+
+
+```from avalanches import * ```
+
+- to detect avalanches and calculate their sizes and lifetimes simply run:
+
+```
+sizes, lifetimes = main(dataset,interv)
+```
+   where ```dataset``` is a tri/bidimensional array (shape = temporal dim x spatial dims) of discretized signals and ```interv``` is the width of the chosen temporal bin to bin the data.
+   
+- Detailed instructions in the tutorial notebook

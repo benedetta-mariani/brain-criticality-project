@@ -357,40 +357,63 @@ def binning(n, interv):
 
     for s in range(len(init)):
         avalanches.append(new[init[s]:end[s]])
+    
+    sizes = []
+    durations = []
+    for l in range(len(avalanches)):
+        sizes.append(np.sum(avalanches[l]))
+        durations.append(len(avalanches[l]))
         
-    return avalanches
+    return sizes, durations
     
     
 """
-def binning(n,interv):
-    
+def binning(n,interv)
     if len(n)%interv > 0:
 
-        add = (int(len(n)/interv) + 1)* interv - len(n)
-        n = n.tolist()
-        for i in range(add):
-            n = n + [0]
+            add = (int(len(n)/interv) + 1)* interv - len(n)
+            n = n.tolist()
+            for i in range(add):
+                n = n + [0]
 
-    n = np.asarray(n).reshape(int(len(n)/interv), interv)
-
-
-    avalanches = []
-    avalanches.append([])
-    j = 0
-    for z in range(len(n)):
-        if np.any(n[z]):
-            avalanches[j].append(np.sum(n[z]))
-        else:
-            j = j + 1
-            avalanches.append([])
+        n = np.asarray(n).reshape(int(len(n)/interv), interv)
 
 
-    for i in range(avalanches.count([])):
-        avalanches.remove([])
+        avalanches = []
+        avalanches.append([])
+        j = 0
+        for z in range(len(n)):
+            if np.any(n[z]):
+                avalanches[j].append(np.sum(n[z]))
+            else:
+                j = j + 1
+                avalanches.append([])
 
-    return avalanches
+
+        for i in range(avalanches.count([])):
+            avalanches.remove([])
+
+        return avalanches
 """
-def draw(sample, xmin,xmax, model,ax= None,lim1 = 4,color = 'green'):
+def main(sample,av = "default"):
+    """
+    Parameters
+    --------
+    sample : discretized array of voltages
+    av : width of the interval to bin the data and calculate avalanches (average inter event interval usually)
+    
+    Returns
+    --------
+    sizes and durations of the detected avalanches
+    """
+    peaks = events(sample)
+    if av == "default":
+        av = avinterv(peaks)
+    sizes, durations = binning(peaks,av)
+    
+    return sizes, durations
+
+def draw(sample, xmin,xmax, model,ax= None,avinterval = None,lim1 = 4,color = 'green'):
     """
     Fits the data contained in "sample" (i.e. sizes or durations of the avalanches) with the model chosen.
     xmin : the maximum xmin that can be considered in the power law fit.
@@ -408,10 +431,14 @@ def draw(sample, xmin,xmax, model,ax= None,lim1 = 4,color = 'green'):
         ax = fig.add_subplot(1,1,1)
         
     ns = len(pwl.pdf(new)[0])
-    nbins = np.logspace(np.log10(min(new)),np.log10(max(new)),ns)
+    
     
     ax.set_xscale('log')
     
+    #if avinterval != None:
+        #new = np.asarray(new)*avinterval
+    #print(new)
+    nbins = np.logspace(np.log10(min(new)),np.log10(max(new)),ns)
     ax.hist(new, density = True, histtype = 'bar',log = True,bins = nbins, color = color)
     pwl.plot_pdf(new, color='r', linewidth=2, label='pdf', linear_bins = False)
     
@@ -431,7 +458,7 @@ def draw(sample, xmin,xmax, model,ax= None,lim1 = 4,color = 'green'):
     elif model == 'truncated_power_law':
         ypred.truncated_power_law.plot_pdf( color='blue', linestyle='-', linewidth=2, label='Truncated_power_law fit')
         print('Parameters are (alpha,lambda)',ypred.truncated_power_law.alpha, 'and',ypred.truncated_power_law.Lambda)
-    plt.legend(fontsize = 'x-large')
+    plt.legend(fontsize = 'medium')
 
 def disegno(sizess, durationss, xmins, xmind, boool, maxs ,maxd,lim1,lim2):
    
@@ -527,10 +554,10 @@ def RasterPlot(sample, av):
         for j in range(sample.shape[1]):
             if sample[i,j]==1:
                 plt.plot(i,j, 'b.')
-    plt.xlabel('Time (temporal frame)', fontsize = 'xx-large')
-    plt.ylabel('Channel',fontsize = 'xx-large')
-    plt.xticks(fontsize = 'large')
-    plt.yticks(fontsize = 'large')
+    plt.xlabel('Time (temporal frame)', fontsize = 'medium')
+    plt.ylabel('Channel',fontsize = 'medium')
+    plt.xticks(fontsize = 'medium')
+    plt.yticks(fontsize = 'medium')
     
 
 
@@ -561,9 +588,13 @@ def delta(alpha, salpha, tau, stau):
     return (alpha - 1)/(tau -1), np.sqrt((1/(tau -1))**2*salpha**2+ ((1-alpha)/(tau -1)**2)**2*stau**2)
 
 
-def scaling(sizes, durations, tau = "default", errtau = "default", alpha = "default", erralpha = "default", maxxminsizes = "default", maxxmindur = "default", xmaxsizes = "default", xmaxdur = "default", lim1 = 4 , lim2 = 4):
+def scaling(sizes, durations, avinterval, ax = None, tau = "default", errtau = "default", alpha = "default", erralpha = "default", maxxminsizes = "default", maxxmindur = "default", xmaxsizes = "default", xmaxdur = "default", lim1 = 4 , lim2 = 4):
     
-
+    
+    if ax == None:
+        fig = plt.figure(figsize = (6,4))
+        ax = fig.add_subplot(1,1,1)
+        
     if maxxminsizes ==  "default":
         maxxminsizes = max(sizes)
     if xmaxsizes ==  "default":
@@ -587,8 +618,13 @@ def scaling(sizes, durations, tau = "default", errtau = "default", alpha = "defa
     errpred = delta(alpha, erralpha,tau, errtau)[1]
 
 
-    xmin1 = xminn(sizes, maxxminsizes,xmaxsizes,lim1)
-    xmin2 = xminn(durations, maxxmindur,xmaxdur,lim2)
+    #xmin1 = xminn(sizes, maxxminsizes,xmaxsizes,lim1)
+    #xmin2 = xminn(durations, maxxmindur,xmaxdur,lim2)
+    xmin1 = 1
+    xmin2 = 1
+    
+    
+    durations = np.array(durations)*avinterval
     prova = np.array([np.asarray(sizes), np.asarray(durations)])
     prova = prova.transpose()
     prova2 = [0 for i in range(len(prova))]
@@ -631,40 +667,39 @@ def scaling(sizes, durations, tau = "default", errtau = "default", alpha = "defa
     print('Prediction from crackling noise relation: delta = ',pred, '+-', errpred)
     print('Fit from of average size given duration points: delta = ',fit, '+-', errfit)
     
-    plt.figure(figsize = (6,4))
  
 
-    plt.xscale('log')
-    plt.yscale('log')
-    
-    x = np.arange(xmin2,max(durations))
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+   
+    x = np.arange(min(durations),max(durations))
 
-    plt.plot(durations, sizes, '.', color = blues[15],alpha = 0.3)
-    plt.plot(np.asarray(durations)[nott],np.asarray(sizes)[nott], '.', color = 'gray')
+    ax.plot(durations, sizes, '.', color = blues[15],alpha = 0.3)
+    ax.plot(np.asarray(durations)[nott],np.asarray(sizes)[nott], '.', color = 'gray')
     
-    plt.plot(x, (10**inter)*x**pred, 'r', label = 'Prediction', lw = 1.5)
+    ax.plot(x, (10**inter)*x**pred, 'r', label = 'Prediction', lw = 1.5)
 
-    plt.plot(x, (10**inter)*x**fit, color = greens[12], label = 'Fit', lw = 1.5)
+    ax.plot(x, (10**inter)*x**fit, color = greens[12], label = 'Fit', lw = 1.5)
 
  
 
-    plt.fill_between(x,(10**(errfit*-3))*(10**inter)*x**fit,
+    ax.fill_between(x,(10**(errfit*-3))*(10**inter)*x**fit,
                      (10**(errfit*3))*(10**inter)*x**fit,color= greens[5],lw=0)
     
     
-    plt.fill_between(x,(10**(errpred*-3))*(10**inter)*x**pred,
+    ax.fill_between(x,(10**(errpred*-3))*(10**inter)*x**pred,
                      (10**(errpred*+3))*(10**inter)*x**pred,color= reds[5],lw=0)
 
-    plt.xlabel('Durations', fontsize = 'xx-large')
-    plt.ylabel('Sizes',fontsize = 'xx-large')
+    ax.set_xlabel('Durations [ms]', fontsize = 'medium')
+    ax.set_ylabel('Sizes [# of events]',fontsize = 'medium')
 
 
 
-    plt.xticks(fontsize = 'xx-large')
-    plt.yticks(fontsize = 'xx-large')
-    legend = plt.legend(fontsize = 'xx-large')
+    plt.xticks(fontsize = 'medium')
+    plt.yticks(fontsize = 'medium')
+    legend = ax.legend(fontsize = 'medium')
 
-    plt.errorbar(a,b,yerr = c, fmt = 'o', color = blues[29],markersize = 3.5,barsabove = False,capsize = 3, elinewidth = 3,capthick = 1)
+    ax.errorbar(a,b,yerr = c, fmt = 'o', color = blues[29],markersize = 3.5,barsabove = False,capsize = 3, elinewidth = 3,capthick = 1)
     
 
 def xminn(sample,maxxmin = "default",xmax = "default",lim = 4):
@@ -690,12 +725,13 @@ def esponente(sample,maxxmin = "default",xmax = "default",lim = "default"):
 
 def ypred(sample, xmin, xmax,lim = 4):
     """
-    xmin = xmax in genere
+
     """
-    ypred = pwl.Fit(sample,xmin = (1,xmin + 1),xmax = xmax,parameter_range = {'alpha' : [1,lim]},discrete = True)
+    ypred = pwl.Fit(sample,xmin = (xmin,xmin + 1),xmax = xmax,parameter_range = {'alpha' : [1,lim]},discrete = True)
     return ypred
 
 def goodness(sample, xmin, xmax, Ds,lim):
+    #mi ricordo che lo ho dimenticato
  
     predic = ypred(sample, xmin, xmax,lim)
     alpha = predic.power_law.alpha
@@ -746,12 +782,12 @@ def picchibinned(sample1, interv):
                 lenn = lenn + 1
             
     newvec = np.empty((int(lenn/interv),len(sample1[0])), dtype = int)
-    prova = sample1.reshape(int(lenn/interv), interv,len(sample1[0]))
-
+    prova = np.sum(sample1.reshape(int(lenn/interv), interv,len(sample1[0])),axis = 1)
+    #verificare
     
     for s in range(len(sample1[0])):
         for l in range(len(prova)):
-            if np.any(prova[l,:,s]):
+            if (prova[l,s]):
                 newvec[l,s] = 1
             else:
                 newvec[l,s] = 0
@@ -807,7 +843,7 @@ def GaussianComparison(sample,n1,n2, thres):
 
     sig = (sample[:,n1,n2] - np.mean(sample[:,n1,n2]))/np.std(sample[:,n1,n2]) # normalizes the signal by the SD
 
-    bins = np.arange(-6,6, 0.1)
+    bins = np.arange(min(sig),max(sig), 0.1)
     a,b = np.histogram(sig, bins =bins , density = True)
     x = (b[:-1]+ b[1:])/2 
     y = a
@@ -822,19 +858,20 @@ def GaussianComparison(sample,n1,n2, thres):
     popt,pcov = curve_fit(gaus,x,y,p0=[means,sigma])
  
 
-    plt.hist(sig, bins = len(x), density = True)
+    plt.hist(sig, bins = bins, density = True)
 
     plt.plot(x,gaus(x,*popt),'-', color = 'purple',label='Best Gaussian fit')
 
-    plt.xticks( np.arange(-6,6,1),fontsize = 'xx-large')
+    plt.xticks( np.arange(int(min(sig)),int(max(sig)),3),fontsize = 'xx-large')
     plt.yticks( fontsize = 'xx-large')
     plt.xlabel('Normalized amplitude (SD)', fontsize = 'xx-large')
     plt.ylabel('Probability density', fontsize = 'xx-large')
-    v = np.arange(0,0.6,0.01)
+    v = np.arange(0,max(y),0.01)
     x1 = np.array([-thres for i in range(len(v))])
     x2 = np.array([thres for i in range(len(v))])
     plt.plot(x1,v, 'r-', label = r'$\pm$ 3 SD')
     plt.plot(x2,v, 'r-', r'3 SD')
     plt.yscale('log')
     plt.legend( fontsize = 'xx-large')
+    plt.ylim(10**-7,)
 

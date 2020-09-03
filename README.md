@@ -58,7 +58,8 @@ To open the results in Python and analyze them just run:
 nunits = 200
 ntime = 1000
 dt = 0.001
-N = int(ntime/dt)
+tau = 0.08
+N = int(ntime/dt) - int(100*tau/dt)
 neuro = np.array([[0. for r in range(N)] for s in range(nunits)])
 
 import csv

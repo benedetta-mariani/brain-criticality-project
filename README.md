@@ -47,6 +47,7 @@ Main(nunits,ntime)
 To open the results in Python and analyze them just run:
 
 ```
+import numpy as np
 nunits = 200
 ntime = 1000
 dt = 0.001

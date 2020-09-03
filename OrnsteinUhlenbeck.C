@@ -18,30 +18,31 @@
 using namespace std;
 
 
-double* DiffusionCoefficient(double dt, double T, double tau, double D);
+double* OUGillespieDiffusion(double dt, double T, double tau, double D);
 double* OrnsteinUhlebeck(double dt, double T, double tau, double* D);
 
 
-void Main(int nunits, int ntime){ 
+void Main(int nunits, int T){ 
 
 	double dt = 0.001;
-	double T = ntime;
 	double tau = 10;
 	double Di = 1;
+	double tau2 = 0.08;
 	int N = int(T/dt);
 
-	double tau2 = 0.08;
+	double* diff;
+	diff = OUGillespieDiffusion(dt, T, tau, Di);
+
 
 	ofstream fout("output.csv");
-	double* diff;
-	diff = DiffusionCoefficient(dt, T, tau, Di);
 	
 	for (int i = 0; i < nunits; i ++){
 		
 		double* poi;
 		poi = OrnsteinUhlebeck(dt, T, tau2, diff);
-		fout << *(poi);
-		for (int s = 1; s < N; s ++){
+		fout << *(poi+ int(100*tau2/dt));  // remove initial transient
+
+		for (int s = int(100*tau2/dt)+1; s < N; s ++){
 			fout << ", "<< *(poi+s);
 		}
 
@@ -60,9 +61,10 @@ double* OrnsteinUhlebeck(double dt, double T, double tau, double* D) {
 	
 	int N = int(T/dt);
 	double *x = new double[N];
+
 	x[0] = 0;
-	for (int t = 0; t < N; t ++){
-		x[t+1] = x[t] -x[t]*dt/tau + TMath::Sqrt(*(D+t)*dt)*gRandom->Gaus(0,1);
+	for (int t = 0; t < N-1; t ++){
+		x[t+1] = x[t] -x[t]*dt/tau + TMath::Sqrt(*(D+int(tau/dt*100)+t)*dt)*gRandom->Gaus(0,1);
 	}
 
 	return x;
@@ -70,24 +72,34 @@ double* OrnsteinUhlebeck(double dt, double T, double tau, double* D) {
 	
 }
 
-double* DiffusionCoefficient(double dt, double T, double tau, double D) {
+double* OUGillespieDiffusion(double dt, double T, double tau, double D){
+
 
 	int N = int(T/dt);
-	double *x = new double[N];	
-	x[0] = 0;
-	for (int t = 0; t < N; t ++){
-		x[t+1] = x[t] -x[t]*dt/tau + TMath::Sqrt(D*dt)*gRandom->Gaus(0,1);
-	}
+	int n = int(tau/dt*100) + N; // to avoid initial transient
+	double *x = new double[n];	
 
-	for (int i = 0; i < N; i ++){
+	x[0] = 0;
+    double mu = TMath::Exp(-dt/tau);
+    double sigma = TMath::Sqrt(D*tau/2*(1-pow(mu,2)));
+
+    for (int t = 0; t < n-1; t ++){
+        x[t+1] = x[t]*mu + sigma*gRandom->Gaus(0,1);
+     }
+  
+	for (int i = 0; i < n; i ++){
 		if (x[i] < 0.2){
 			x[i] = 0.2;
 		}
 	}
-	return  x;
 	
-	
+return x;
+
 }
+
+	
+	
+
 
 
     

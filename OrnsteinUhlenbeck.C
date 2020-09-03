@@ -18,8 +18,8 @@
 using namespace std;
 
 
-double* OrnsteinUhlebeck(double*x,double dt, double T, double tau, double D);
-double* OrnsteinUhlebeck2(double*x,double dt, double T, double tau, double* D);
+double* OrnsteinUhlebeck(double dt, double T, double tau, double D);
+double* OrnsteinUhlebeck2(double dt, double T, double tau, double* D);
 
 
 
@@ -28,56 +28,47 @@ void Main(int nunits, int ntime){
 
 	double dt = 0.001;
 	double T = ntime;
-	double tau = 8;
+	double tau = 10;
 	double Di = 1;
 	int N = int(T/dt);
-	double x[N];
-	double x2[N];
+
+	double tau2 = 0.08;
+
+	ofstream fout("output.csv");
+	double* diff;
+	diff = OrnsteinUhlebeck(dt, T, tau, Di);
 	
-
-	double tau2 = 0.1;
-	
-
-	vector <double> * Neurons= new vector <double> [nunits];
-
-
-	ofstream fout("output.txt");
-	double *diff;
-	diff = OrnsteinUhlebeck(x2,dt, T, tau, Di);
-	fout << 0;
 	for (int i = 0; i < nunits; i ++){
-		
-		double * poi;
-		poi = OrnsteinUhlebeck2(x,dt, T, tau2, diff);
+		fout << 0;
+		double* poi;
+		poi = OrnsteinUhlebeck2(dt, T, tau2, diff);
 
 
 		for (int s = 0; s < N; s ++){
 
 
-			Neurons[i].push_back(*(poi+s));
-			//cout <<(*(poi + s))<< endl;
-			//SaveFile << " ";
 			fout << ", "<< *(poi+s);
-			//fout << " ";
+
 			
 		}
-		
-//fout << "\n";
+
+		delete []poi;
+		fout << " \n ";
 
 
+
+	}
+
+	delete []diff;
+	fout.close();
 }
 
 
 
-
-fout.close();
-}
-
-
-
-double* OrnsteinUhlebeck2(double *x,double dt, double T, double tau, double* D) {
-
+double* OrnsteinUhlebeck2(double dt, double T, double tau, double* D) {
+	
 	int N = int(T/dt);
+	double *x = new double[N];
 	x[0] = 0;
 	for (int t = 0; t < N; t ++){
 		x[t+1] = x[t] -x[t]*dt/tau + TMath::Sqrt(*(D+t)*dt)*gRandom->Gaus(0,1);
@@ -88,9 +79,10 @@ double* OrnsteinUhlebeck2(double *x,double dt, double T, double tau, double* D) 
 	
 }
 
-double* OrnsteinUhlebeck(double *x, double dt, double T, double tau, double D) {
+double* OrnsteinUhlebeck(double dt, double T, double tau, double D) {
 
 	int N = int(T/dt);
+	double *x = new double[N];	
 	x[0] = 0;
 	for (int t = 0; t < N; t ++){
 		x[t+1] = x[t] -x[t]*dt/tau + TMath::Sqrt(D*dt)*gRandom->Gaus(0,1);
@@ -98,11 +90,11 @@ double* OrnsteinUhlebeck(double *x, double dt, double T, double tau, double D) {
 
 
 	for (int i = 0; i < N; i ++){
-		if (x[i] < 0.02){
-			x[i] = 0.02;
+		if (x[i] < 0.2){
+			x[i] = 0.2;
 		}
 	}
-	return x;
+	return  x;
 	
 	
 }

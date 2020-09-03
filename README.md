@@ -37,3 +37,43 @@ sizes, lifetimes = main(dataset,interv)
    where ```dataset``` is a tri/bidimensional array (shape = temporal dim x spatial dims) of discretized signals and ```interv``` is the width of the chosen temporal bin to bin the data.
    
 - Detailed instructions in the tutorial notebook
+
+# OrnsteinUhlenbeck.C
+is a C++ (ROOT) implementation of N Ornstein Uhlebenck processes with a diffusion coefficient that varies in time (here accordingly to another Ornstein Uhlenbeck porcess thresholded). After compliling, it is obviously much faster than the Python implementation.
+
+To compile it and run it:
+
+```
+root -l
+.L OrnsteinUhlenbeck.C++
+int ntime = 1000;
+int nunits = 200;
+Main(nunits,ntime)
+```
+To open the results in Python and analyze them just run:
+
+```
+nunits = 200
+ntime = 1000
+dt = 0.001
+N = int(ntime/dt)
+neuro = np.array([[0. for r in range(N)] for s in range(nunits)])
+
+import csv
+with open('output.csv') as csv_file:
+    
+    csv_reader = csv.reader(csv_file, delimiter=',')
+
+    i = 0
+    for row in csv_reader:
+        if i < nunits:
+            neuro[i] = np.array(row)
+            i = i +1
+            
+```
+
+
+
+
+
+

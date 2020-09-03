@@ -18,10 +18,8 @@
 using namespace std;
 
 
-double* OrnsteinUhlebeck(double dt, double T, double tau, double D);
-double* OrnsteinUhlebeck2(double dt, double T, double tau, double* D);
-
-
+double* DiffusionCoefficient(double dt, double T, double tau, double D);
+double* OrnsteinUhlebeck(double dt, double T, double tau, double* D);
 
 
 void Main(int nunits, int ntime){ 
@@ -36,26 +34,19 @@ void Main(int nunits, int ntime){
 
 	ofstream fout("output.csv");
 	double* diff;
-	diff = OrnsteinUhlebeck(dt, T, tau, Di);
+	diff = DiffusionCoefficient(dt, T, tau, Di);
 	
 	for (int i = 0; i < nunits; i ++){
-		fout << 0;
+		
 		double* poi;
-		poi = OrnsteinUhlebeck2(dt, T, tau2, diff);
-
-
-		for (int s = 0; s < N; s ++){
-
-
+		poi = OrnsteinUhlebeck(dt, T, tau2, diff);
+		fout << *(poi);
+		for (int s = 1; s < N; s ++){
 			fout << ", "<< *(poi+s);
-
-			
 		}
 
 		delete []poi;
 		fout << " \n ";
-
-
 
 	}
 
@@ -65,7 +56,7 @@ void Main(int nunits, int ntime){
 
 
 
-double* OrnsteinUhlebeck2(double dt, double T, double tau, double* D) {
+double* OrnsteinUhlebeck(double dt, double T, double tau, double* D) {
 	
 	int N = int(T/dt);
 	double *x = new double[N];
@@ -79,7 +70,7 @@ double* OrnsteinUhlebeck2(double dt, double T, double tau, double* D) {
 	
 }
 
-double* OrnsteinUhlebeck(double dt, double T, double tau, double D) {
+double* DiffusionCoefficient(double dt, double T, double tau, double D) {
 
 	int N = int(T/dt);
 	double *x = new double[N];	
@@ -87,7 +78,6 @@ double* OrnsteinUhlebeck(double dt, double T, double tau, double D) {
 	for (int t = 0; t < N; t ++){
 		x[t+1] = x[t] -x[t]*dt/tau + TMath::Sqrt(D*dt)*gRandom->Gaus(0,1);
 	}
-
 
 	for (int i = 0; i < N; i ++){
 		if (x[i] < 0.2){

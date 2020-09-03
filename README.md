@@ -40,7 +40,7 @@ To compile it and run it:
 ```
 root -l
 .L OrnsteinUhlenbeck.C++
-int ntime = 1000;
+int ntime = 100;
 int nunits = 200;
 Main(nunits,ntime)
 ```
@@ -49,7 +49,7 @@ To open the results in Python and analyze them just run:
 ```
 import numpy as np
 nunits = 200
-ntime = 1000
+ntime = 100
 dt = 0.001
 tau = 0.08
 N = int(ntime/dt) - int(100*tau/dt)

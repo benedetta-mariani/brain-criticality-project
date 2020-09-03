@@ -25,9 +25,9 @@ double* OrnsteinUhlebeck(double dt, double T, double tau, double* D);
 void Main(int nunits, int T){ 
 
 	double dt = 0.001;
-	double tau = 10;
+	double tau = 4;
 	double Di = 1;
-	double tau2 = 0.08;
+	double tau2 = 0.1;
 	int N = int(T/dt);
 
 	double* diff;
@@ -36,22 +36,20 @@ void Main(int nunits, int T){
 
 	ofstream fout("output.csv");
 	
+	double* poi;
 	for (int i = 0; i < nunits; i ++){
-		
-		double* poi;
+
 		poi = OrnsteinUhlebeck(dt, T, tau2, diff);
 		fout << *(poi+ int(100*tau2/dt));  // remove initial transient
 
 		for (int s = int(100*tau2/dt)+1; s < N; s ++){
 			fout << ", "<< *(poi+s);
 		}
-
-		delete []poi;
+		
 		fout << " \n ";
 
 	}
 
-	delete []diff;
 	fout.close();
 }
 

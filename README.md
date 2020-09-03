@@ -14,7 +14,7 @@ Main packages needed:
 
 - powerlaw (https://github.com/jeffalstott/powerlaw)
 
-- some functions of scipy:
+- some functions of scipy
 
 ## to use it: 
 

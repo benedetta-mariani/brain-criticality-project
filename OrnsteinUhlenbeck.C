@@ -77,11 +77,11 @@ double* OUGillespieDiffusion(double dt, double T, double tau, double D){
 	int n = int(tau/dt*100) + N; // to avoid initial transient
 	double *x = new double[n];
 	x[0] = 0;
-    double mu = TMath::Exp(-dt/tau);
-    double sigma = TMath::Sqrt(D*tau/2*(1-pow(mu,2)));
-    for (int t = 0; t < n-1; t ++){
-        x[t+1] = x[t]*mu + sigma*gRandom->Gaus(0,1);
-     }
+    	double mu = TMath::Exp(-dt/tau);
+    	double sigma = TMath::Sqrt(D*tau/2*(1-pow(mu,2)));
+    	for (int t = 0; t < n-1; t ++){
+        	x[t+1] = x[t]*mu + sigma*gRandom->Gaus(0,1);
+     	}
 	for (int i = 0; i < n; i ++){
 		if (x[i] < 0.2){
 			x[i] = 0.2;

@@ -389,7 +389,26 @@ def binning(n,interv):
         avalanches.remove([])
 
     return avalanches
+    
 """
+def main(sample,av = "default"):
+    """
+    Parameters
+    --------
+    sample : discretized array of voltages
+    av : width of the interval to bin the data and calculate avalanches (average inter event interval usually)
+    
+    Returns
+    --------
+    sizes and durations of the detected avalanches
+    """
+    peaks = events(sample)
+    if av == "default":
+        av = avinterv(peaks)
+    sizes, durations = binning(peaks,av)
+    
+    return sizes, durations
+
 def draw(sample, xmin,xmax, model,ax= None,lim1 = 4,color = 'green'):
     """
     Fits the data contained in "sample" (i.e. sizes or durations of the avalanches) with the model chosen.

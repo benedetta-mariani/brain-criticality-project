@@ -29,24 +29,26 @@ void Main(int nunits, int T){
 	double Di = 1;
 	double tau2 = 0.1;
 	int N = int(T/dt);
+	int n = int(tau/dt*100) + N; 
 
-	double* diff;
+	double *diff;
+
 	diff = OUGillespieDiffusion(dt, T, tau, Di);
 
 
 	ofstream fout("output.csv");
 	
-	double* poi;
 	for (int i = 0; i < nunits; i ++){
 
+		double* poi; 
 		poi = OrnsteinUhlebeck(dt, T, tau2, diff);
 		fout << *(poi+ int(100*tau2/dt));  // remove initial transient
 
 		for (int s = int(100*tau2/dt)+1; s < N; s ++){
 			fout << ", "<< *(poi+s);
 		}
-		
-		fout << " \n ";
+
+		delete []poi;
 
 	}
 

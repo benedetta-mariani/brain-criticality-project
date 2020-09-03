@@ -6,7 +6,7 @@ is a short module to detect events in time series of neural activity, plot raste
 
 - get the module
 
-Packages needed:
+Main packages needed:
 
 - numpy
 
@@ -14,15 +14,7 @@ Packages needed:
 
 - powerlaw (https://github.com/jeffalstott/powerlaw)
 
-
-Other functions needed:
-- scipy.stats.percentileofscore
-
-- scipy.optimize.curve_fit
-
-- scipy.signal.find_peaks
-
-- statsmodels.regression.linear_model
+- some functions of scipy
 
 ## to use it: 
 

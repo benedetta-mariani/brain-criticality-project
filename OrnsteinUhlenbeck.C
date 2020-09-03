@@ -73,6 +73,10 @@ double* OrnsteinUhlebeck(double dt, double T, double tau, double* D) {
 }
 
 double* OUGillespieDiffusion(double dt, double T, double tau, double D){
+<<<<<<< HEAD
+=======
+
+>>>>>>> 296e622466225749c351e6fc210b2aa3e8104e9a
 	int N = int(T/dt);
 	int n = int(tau/dt*100) + N; // to avoid initial transient
 	double *x = new double[n];

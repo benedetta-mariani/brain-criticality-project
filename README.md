@@ -31,7 +31,7 @@ sizes, lifetimes = main(dataset,interv)
 - Detailed instructions in the tutorial notebook
 
 # OrnsteinUhlenbeck.C
-is a C++ (ROOT) implementation of ```nunits``` decoupled Ornstein Uhlenbeck processes with a common diffusion coefficient that varies in time (here accordingly to another Ornstein Uhlenbeck porcess thresholded), as a minimal model for neural activity of independent neurons with a common external driver.
+is a C++ (ROOT) implementation of ```nunits``` decoupled Ornstein Uhlenbeck processes with a common diffusion coefficient that varies in time (here accordingly to a thresholded Ornstein Uhlenbeck process), as a minimal model for neural activity of independent neurons with a common external driver.
 
 After compliling, it is obviously way much faster than the Python implementation.
 
@@ -40,15 +40,16 @@ To compile it and run it:
 ```
 root -l
 .L OrnsteinUhlenbeck.C++
-int ntime = 1000;
+int ntime = 100;
 int nunits = 200;
 Main(nunits,ntime)
 ```
 To open the results in Python and analyze them just run:
 
 ```
+import numpy as np
 nunits = 200
-ntime = 1000
+ntime = 100
 dt = 0.001
 tau = 0.08
 N = int(ntime/dt) - int(100*tau/dt)

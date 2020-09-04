@@ -18,22 +18,22 @@
 using namespace std;
 
 
-double* OUGillespieDiffusion(double dt, double T, double tau, double D);
-double* OrnsteinUhlebeck(double dt, double T, double tau, double* D);
+double* OUGillespieDiffusion(double dt, double T, double tauD, double D);
+double* OrnsteinUhlebeck(double dt, double T, double tau,double tauD, double* D);
 
 
 void Main(int nunits, int T){ 
 
 	double dt = 0.001;
-	double tau = 4;
+	double tauD = 6;
 	double Di = 1;
-	double tau2 = 0.1;
+	double tau = 0.08;
 	int N = int(T/dt);
-	int n = int(tau/dt*100) + N; 
+	int n = int(tauD/dt*100) + N; 
 
 	double *diff;
 
-	diff = OUGillespieDiffusion(dt, T, tau, Di);
+	diff = OUGillespieDiffusion(dt, T, tauD, Di);
 
 
 	ofstream fout("output.csv");
@@ -41,14 +41,15 @@ void Main(int nunits, int T){
 	for (int i = 0; i < nunits; i ++){
 
 		double* poi; 
-		poi = OrnsteinUhlebeck(dt, T, tau2, diff);
-		fout << *(poi+ int(100*tau2/dt));  // remove initial transient
+		poi = OrnsteinUhlebeck(dt, T, tau,tauD, diff);
+		fout << *(poi+ int(100*tau/dt));  // remove initial transient
 
-		for (int s = int(100*tau2/dt)+1; s < N; s ++){
+		for (int s = int(100*tau/dt)+1; s < N; s ++){
 			fout << ", "<< *(poi+s);
 		}
 
 		delete []poi;
+		fout << " \n ";
 
 	}
 
@@ -57,14 +58,14 @@ void Main(int nunits, int T){
 
 
 
-double* OrnsteinUhlebeck(double dt, double T, double tau, double* D) {
+double* OrnsteinUhlebeck(double dt, double T, double tau,double tauD, double* D) {
 	
 	int N = int(T/dt);
 	double *x = new double[N];
 
 	x[0] = 0;
 	for (int t = 0; t < N-1; t ++){
-		x[t+1] = x[t] -x[t]*dt/tau + TMath::Sqrt(*(D+int(tau/dt*100)+t)*dt)*gRandom->Gaus(0,1);
+		x[t+1] = x[t] -x[t]*dt/tau + TMath::Sqrt(*(D+int(tauD/dt*100)+t)*dt)*gRandom->Gaus(0,1);
 	}
 
 	return x;
@@ -72,13 +73,13 @@ double* OrnsteinUhlebeck(double dt, double T, double tau, double* D) {
 	
 }
 
-double* OUGillespieDiffusion(double dt, double T, double tau, double D){
+double* OUGillespieDiffusion(double dt, double T, double tauD, double D){
 	int N = int(T/dt);
-	int n = int(tau/dt*100) + N; // to avoid initial transient
+	int n = int(tauD/dt*100) + N; // to avoid initial transient
 	double *x = new double[n];
 	x[0] = 0;
-    	double mu = TMath::Exp(-dt/tau);
-    	double sigma = TMath::Sqrt(D*tau/2*(1-pow(mu,2)));
+    	double mu = TMath::Exp(-dt/tauD);
+    	double sigma = TMath::Sqrt(D*tauD/2*(1-pow(mu,2)));
     	for (int t = 0; t < n-1; t ++){
         	x[t+1] = x[t]*mu + sigma*gRandom->Gaus(0,1);
      	}

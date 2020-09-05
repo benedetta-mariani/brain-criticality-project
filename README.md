@@ -73,7 +73,7 @@ with open('output.csv') as csv_file:
     i = 0
     for row in csv_reader:
         if i < nunits:
-            neuro[i] = np.array(row[int(100*tau/dt):]) // to avoid initial transient
+            neuro[i] = np.array(row[int(100*tau/dt):]) #to avoid initial transient
             i = i +1
             
 ```

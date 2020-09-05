@@ -37,11 +37,11 @@ is a C++ (ROOT) implementation of a multivariate Ornstein Uhlenbeck process on a
 
 where a_<sub>ij</sub> is the synaptic strength between unit i and j, i.e. the element of the adjacency matrix. 
 
-We note that [this equation is entirely equivalent] to the linearized version of a noisy neural network of Wilson-Cowan type (https://seis.bristol.ac.uk/~sb15704/papers/267384.pdf).
+We note that this equation is entirely equivalent to the linearized version of a noisy neural network of Wilson-Cowan type [](https://seis.bristol.ac.uk/~sb15704/papers/267384.pdf).
 
 In the case in which every a_x<sub>ij</sub> is set zero the model reduces to ```nunits``` decoupled Ornstein Uhlenbeck processes with a commmon time varying diffusion coefficient.
 
-Note that [the spectral radius of the adjacency matrix must be less than 1], in order not to have signals that grow/decay in time without bounds (https://arxiv.org/pdf/2007.07447.pdf). 
+Note that the spectral radius of the adjacency matrix must be less than 1, in order not to have signals that grow/decay in time without bounds [](https://arxiv.org/pdf/2007.07447.pdf). 
 
 After compliling, it is obviously way much faster than the Python implementation.
 

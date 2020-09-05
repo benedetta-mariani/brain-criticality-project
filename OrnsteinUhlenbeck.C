@@ -20,7 +20,7 @@
 using namespace std;
 
 
-vector <double> OUGillespieDiffusion(double dt, double T, double tau, double D);
+vector <double> OUGillespieDiffusion(double dt, double T, double tau, double D, double Dstar);
 
 
 void Main(int nunits, int T){ 
@@ -30,11 +30,12 @@ void Main(int nunits, int T){
 	double tau = 0.08;
 	double Dstar = 0.2;
 	double pstar = 0.5;
+	bool connected = kTRUE;
 	int N = int(T/dt);
 	int n = int(tauD/dt*100) + N; 
 	
 	vector <double> diff;
-	diff = OUGillespieDiffusion(dt, T, tauD, Di);
+	diff = OUGillespieDiffusion(dt, T, tauD, Di, Dstar);
 	
 	ofstream fout("output.csv");
 
@@ -77,8 +78,10 @@ void Main(int nunits, int T){
 
 		for (int i = 0; i < nunits; i ++){
 			double value = 0;
-			for (int j = 0; j < nunits; j ++){
-				value += a[i][j]*x[j][t]*dt/tau;
+			if (connected){
+				for (int j = 0; j < nunits; j ++){
+					value += a[i][j]*x[j][t]*dt/tau;
+				}
 			}
 			number = x[i][t] - x[i][t]*dt/tau + value + TMath::Sqrt(diff[int(tauD/dt*100)+t]*dt)*gRandom->Gaus(0,1);
 			x[i].push_back(number);
@@ -96,7 +99,7 @@ void Main(int nunits, int T){
 
 
 
-vector <double> OUGillespieDiffusion(double dt, double T, double tau, double D){
+vector <double> OUGillespieDiffusion(double dt, double T, double tau, double D, double Dstar){
 	int N = int(T/dt);
 	int n = int(tau/dt*100) + N; // to avoid initial transient
 	vector <double> x(n,0.);

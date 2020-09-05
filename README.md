@@ -35,13 +35,15 @@ is a C++ (ROOT) implementation of a multivariate Ornstein Uhlenbeck process on a
 
 ![equation](http://www.sciweavers.org/download/Tex2Img_1599307315.jpg)
 
-where $a_{ij}$ is the synaptic strength between unit i and j, i.e. the element of the adjacency matrix. In the case in which everey a_{ij} is equal zero the model reduces to ```nunits``` decoupled Ornstein Uhlenbeck processes with a commmon time varying diffusion coefficient.
+where a_x<sub>ij</sub> is the synaptic strength between unit i and j, i.e. the element of the adjacency matrix. 
 
-Note that in order
+We note that this equation is entirely equivalent to the linearized version of a noisy neural network of Wilson-Cowan type [1](https://seis.bristol.ac.uk/~sb15704/papers/267384.pdf).
+
+In the case in which every a_x<sub>ij</sub> is set zero the model reduces to ```nunits``` decoupled Ornstein Uhlenbeck processes with a commmon time varying diffusion coefficient.
+
+Note that the spectral radius of the adjacency matrix must be less than 1, in order not to have signals that grow/decay in time without bounds [2](https://arxiv.org/pdf/2007.07447.pdf). 
 
 After compliling, it is obviously way much faster than the Python implementation.
-
-
 
 To compile it and run it:
 
@@ -49,14 +51,14 @@ To compile it and run it:
 root -l
 .L OrnsteinUhlenbeck.C++
 int ntime = 100;
-int nunits = 200;
+int nunits = 220;
 Main(nunits,ntime)
 ```
 To open the results in Python and analyze them just run:
 
 ```
 import numpy as np
-nunits = 200
+nunits = 220
 ntime = 100
 dt = 0.001
 tau = 0.08
@@ -71,7 +73,7 @@ with open('output.csv') as csv_file:
     i = 0
     for row in csv_reader:
         if i < nunits:
-            neuro[i] = np.array(row)
+            neuro[i] = np.array(row[int(100*tau/dt):]) // to avoid initial transient
             i = i +1
             
 ```

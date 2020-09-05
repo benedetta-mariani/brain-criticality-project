@@ -39,7 +39,7 @@ where a<sub>ij</sub> is the synaptic strength between unit i and j, i.e. the ele
 
 We note that this equation is entirely equivalent to the linearized version of a noisy neural network of Wilson-Cowan type [[1]](https://seis.bristol.ac.uk/~sb15704/papers/267384.pdf).
 
-In the case in which every ax<sub>ij</sub> is set zero the model reduces to ```nunits``` decoupled Ornstein Uhlenbeck processes with a commmon time varying diffusion coefficient.
+In the case in which every a<sub>ij</sub> is set zero the model reduces to ```nunits``` decoupled Ornstein Uhlenbeck processes with a commmon time varying diffusion coefficient.
 
 Note that the spectral radius of the adjacency matrix must be less than 1, in order not to have signals that grow/decay in time without bounds [[2]](https://arxiv.org/pdf/2007.07447.pdf). 
 

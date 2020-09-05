@@ -28,6 +28,8 @@ void Main(int nunits, int T){
 	double tauD = 6;
 	double Di = 1;
 	double tau = 0.08;
+	double Dstar = 0.2;
+	double pstar = 0.5;
 	int N = int(T/dt);
 	int n = int(tauD/dt*100) + N; 
 	
@@ -44,7 +46,7 @@ void Main(int nunits, int T){
 	for (int r = 0; r < nunits; r++){
 	    for (int s = 0; s < r; s++){
 	        double g = gRandom->Uniform(0,1);
-	        if (g <= 0.5){
+	        if (g <= pstar){
 	            a[r][s] = 1;
 	        }
 	        else{
@@ -55,7 +57,6 @@ void Main(int nunits, int T){
 	    a[r][r] = 0; // no self edges
 	 }
 
-
 	for (int r = 0; r < nunits; r++){
 	    for (int s = 0; s < r + 1; s++){
 	        a[r][s] = a[r][s]/120; //Divided by this constant so to have spectral radius of a < 1. 
@@ -65,12 +66,12 @@ void Main(int nunits, int T){
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	vector <double> x[nunits];
-
+	double x0;
 	for (int i = 0; i < nunits; i ++){
-
-		x[i].push_back(0.);
+		x0 = 0.;
+		x[i].push_back(x0);
 	}
-		
+	
 	double number;
 	for (int t = 0; t < N-1; t ++){
 
@@ -79,53 +80,38 @@ void Main(int nunits, int T){
 			for (int j = 0; j < nunits; j ++){
 				value += a[i][j]*x[j][t]*dt/tau;
 			}
-
 			number = x[i][t] - x[i][t]*dt/tau + value + TMath::Sqrt(diff[int(tauD/dt*100)+t]*dt)*gRandom->Gaus(0,1);
 			x[i].push_back(number);
 		}
-
 	}
-
-
-
 	for (int i = 0; i < nunits; i ++){
-		fout << 0;
+		fout << x[i][0];
 		for (int j = 1; j < N; j ++){
 			fout << "," << x[i][j];
 		}
 		fout << "\n";
 	}
-		
-
-
 	fout.close();
-	
 }
 
 
 
 vector <double> OUGillespieDiffusion(double dt, double T, double tau, double D){
-	
 	int N = int(T/dt);
 	int n = int(tau/dt*100) + N; // to avoid initial transient
 	vector <double> x(n,0.);
-
-    double mu = TMath::Exp(-dt/tau);
-    double sigma = TMath::Sqrt(D*tau/2*(1-pow(mu,2)));
-
-    x[0] = 0.;
-
-    for (int t = 0; t < n-1; t ++){
-        x[t+1] = x[t]*mu + sigma*gRandom->Gaus(0,1);  
-     }
-
+    	double mu = TMath::Exp(-dt/tau);
+    	double sigma = TMath::Sqrt(D*tau/2*(1-pow(mu,2)));
+    	x[0] = 0.;
+    	for (int t = 0; t < n-1; t ++){
+        	x[t+1] = x[t]*mu + sigma*gRandom->Gaus(0,1);  
+     	}
 	for (int i = 0; i < n; i ++){
-		if (x[i] < 0.2){
-			x[i] = 0.2;
+		if (x[i] < Dstar){
+			x[i] = Dstar;
 		}
 	}	
 	return x;
-
 }
 
 		

@@ -41,7 +41,7 @@ Note that this equation is entirely equivalent to the linearized version of a no
 
 In the case in which every a<sub>ij</sub> is set zero the model reduces to ```nunits``` decoupled Ornstein Uhlenbeck processes with a commmon time varying diffusion coefficient.
 
-Note that the process has a stationary distribution if all the eigenvalues of the matrix M = (I - A), with A the adjacency matrix and I the identity matrix, have positive real part. A sufficient condition for this to be valid is the spectral radius of the adjacency matrix being less than 1 [[2]](https://arxiv.org/pdf/2007.07447.pdf).
+Note that the process has a stationary distribution if all the eigenvalues of the matrix M = (I - A)/```tau```, with A the adjacency matrix and I the identity matrix, have positive real part. A sufficient condition for this to be valid is the spectral radius of the adjacency matrix being less than 1 [[2]](https://arxiv.org/pdf/2007.07447.pdf) (or less than 1/```tau```, if the matrix M is defined as = W -I/```tau```, as is done here).
 
 After compliling, it is obviously way much faster than the Python implementation.
 

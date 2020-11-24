@@ -17,11 +17,41 @@
 #include <string> 
 #include <fstream>
 #include <sstream>
-
-
 #endif
 
 using namespace std;
+
+
+
+/*To open the results in python:
+
+import csv
+import numpy as np
+
+nunits = ... #(205)
+T = ...
+
+
+tau = 0.06 
+
+dt = 0.001
+time = int(T/dt)
+N = time - int(100*tau/dt) # to avoid transient
+neuro = np.array([[0. for r in range(N)] for s in range(nunits)])
+
+
+with open('output.csv') as csv_file:
+    csv_reader = csv.reader(csv_file, delimiter=',')
+    i = 0
+    for row in csv_reader:
+        if i < nunits:
+            neuro[i] = np.array(row[int(100*tau/dt):])
+            i = i + 1
+            
+neuro = neuro.transpose()
+*/
+
+
 
 
 vector <double> OUGillespieDiffusion(double dt, double T, double tau, double D, double Dstar);
@@ -52,13 +82,12 @@ void Main(int nunits, int T){
   	string line;
   	int l = 0;
   	while (getline( file, line, '\n')){
-	  istringstream templine(line); 
-	  string data;
-	  while (getline( templine, data, ',')) 
-	  {
-	    a[l].push_back(atof(data.c_str())); 
-	  }
-	  l ++;
+		istringstream templine(line); 
+		string data;
+		while (getline(templine, data, ',')){
+			a[l].push_back(atof(data.c_str())); 
+		}
+		l ++;
 	}
   	file.close();
   	////////////////////////////////////////////////////////////
@@ -92,12 +121,12 @@ vector <double> OUGillespieDiffusion(double dt, double T, double tau, double D, 
 	int N = int(T/dt);
 	int n = int(tau/dt*100) + N; // to avoid initial transient
 	vector <double> x(n,0.);
-    	double mu = TMath::Exp(-dt/tau);
-    	double sigma = TMath::Sqrt(D*tau/2*(1-pow(mu,2)));
-    	x[0] = 0.;
-    	for (int t = 0; t < n-1; t ++){
-        	x[t+1] = x[t]*mu + sigma*gRandom->Gaus(0,1);  
-     	}
+	double mu = TMath::Exp(-dt/tau);
+	double sigma = TMath::Sqrt(D*tau/2*(1-pow(mu,2)));
+	x[0] = 0.;
+	for (int t = 0; t < n-1; t ++){
+    	x[t+1] = x[t]*mu + sigma*gRandom->Gaus(0,1);  
+ 	}
 	for (int i = 0; i < n; i ++){
 		if (x[i] < Dstar){
 			x[i] = Dstar;
@@ -137,8 +166,4 @@ vector<vector<double>> units(int nunits,  vector<double> a[],vector<double> diff
 	return x;
 
 }
-
-
-
-
 

@@ -34,6 +34,12 @@ bindata = threshold(a1,np.mean(a1,axis = 0),np.std(a1,ddof = 1,axis = 0),3,"posn
 
 sizes, durations = main(bindata)
 
+## Plots
+
+av = avinterv(events(bindata))
+RasterPlot(bindata, av)
+plt.show()
+
 draw(sizes, max(sizes), max(sizes), "power_law")
 plt.xlabel ('Sizes [# of events]')
 plt.ylabel('pdf(sizes)')

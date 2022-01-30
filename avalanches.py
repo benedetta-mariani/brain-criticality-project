@@ -4,6 +4,7 @@ import powerlaw as pwl
 from matplotlib import cm
 from statsmodels.regression import linear_model as sm
 from scipy.signal import find_peaks
+from scipy import signal
 from scipy.stats import percentileofscore
 
 

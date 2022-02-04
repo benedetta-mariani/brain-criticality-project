@@ -700,5 +700,5 @@ def Kuramoto_param(phases):
     """
     if sample1.shape[0] > sample1.shape[1]:
         raise Exception('Error, the array must be transposed (time should be the second dimension)')
-    r = np.abs(np.mean(np.exp(1j*phases),axis=0))
+    r = np.abs(np.nanmean(np.exp(1j*phases),axis=0))
     return r

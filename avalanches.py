@@ -4,6 +4,7 @@ import powerlaw as pwl
 from matplotlib import cm
 from statsmodels.regression import linear_model as sm
 from scipy.signal import find_peaks
+from scipy import signal
 from scipy.stats import percentileofscore
 
 
@@ -675,29 +676,29 @@ def get_phase(SpikeMat, time_array):
     time_array = array of time, e.g. np.arange(0,T,dt) or np.arange(0,N,1)
     '''
     if SpikeMat.shape[1] > SpikeMat.shape[0]:
-         raise Exception('Error, the array must be transposed (first dimension should be time)')
+        raise Exception('Error, the array must be transposed (first dimension should be time)')
 
     nunits = min(SpikeMat.shape) # number of neurons
-    phase = np.zeros((nunits, len(time_array)))
+    phase = np.empty((nunits, len(time_array)))
 
+    phase[:] = np.nan
     for nrn in np.arange(0,nunits):
-        tspike = time_array[np.array(SpikeMat[:,nrn],dtype = bool)]
-        ispike = np.squeeze(np.where(SpikeMat[:,nrn]))
-        ispike = np.insert(ispike,0,0)
-        ispike = np.insert(ispike,len(ispike),len(time_array)-1)
-
-        for ii in np.arange(1,len(ispike)):  
-            idx1 = ispike[ii-1]
-            idx2 = ispike[ii]
+        tspike = time_array[np.array(SpikeMat[:,nrn],dtype =bool)]
+        ispike = np.where(SpikeMat[:,nrn])
+        
+        for ii in np.arange(1,len(ispike[0])):
+            idx1 = ispike[0][ii-1]
+            idx2 = ispike[0][ii]
             tv_tmp = (time_array[idx1:idx2]-time_array[idx1])/(time_array[idx2]-time_array[idx1]) # normalize in [0,1]
             phase[nrn,idx1:idx2] = 2*np.pi*tv_tmp # normalize in [0,2π]
         
     return phase
-
+    
 def Kuramoto_param(phases):
     """
     phases shape = (nunits,time)
     """
+    if sample1.shape[0] > sample1.shape[1]:
+        raise Exception('Error, the array must be transposed (time should be the second dimension)')
     r = np.abs(np.mean(np.exp(1j*phases),axis=0))
     return r
-

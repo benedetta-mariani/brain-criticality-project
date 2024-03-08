@@ -130,7 +130,11 @@ def threshold3(sample1,means,stds,thres):
                         endss.append(end[f-1])
                         initss.append(init[a])
                         a += 1
-                        #f+=1  
+                        #f+=1
+            if not len((set(np.arange(init[a], end[-1],1)) & set(initsign[:]))):
+                        endss.append(end[-1])
+                        initss.append(init[a])
+     
             for l in range(len(initss)):
                 groups.append((sig[initss[l]:endss[l]]-means[s]))##
                 times.append(tempi[initss[l]:endss[l]])

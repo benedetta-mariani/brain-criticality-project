@@ -31,7 +31,7 @@ def threshold2(sample1,means,stds,thres):
             tempi = np.arange(0,len(sig),1)
             prova =np.array((sig - means[s]) <= -thres*stan, dtype = float)
             init = np.where(np.diff(prova)>0)[0]
-            end = np.where(np.diff(prova)<0)[0] +1 
+            end = np.where(np.diff(prova)<0)[0]
             if len(init) < len(end):
                 init = np.insert(init,0,0)
 
@@ -87,7 +87,7 @@ def threshold3(sample1,means,stds,thres):
             endsign = np.where((changesign)<0)[0]
 
             init = np.where(np.diff(prova)>0)[0]
-            end = np.where(np.diff(prova)<0)[0] + 1
+            end = np.where(np.diff(prova)<0)[0]
             #print(len(initsign) ==len(endsign))
             #print(len(sig),len(initsign),len(init), len(end))
             if len(init) < len(end):
@@ -120,14 +120,17 @@ def threshold3(sample1,means,stds,thres):
 
                 else:
                     if k> 0:
-                        endss.append(end[f])
+                        endss.append(end[f-1])
                         initss.append(init[a])
                         a += k
                         k = 0
-                        f+=1
+                        #f+=1
                     else:
+                        
+                        endss.append(end[f-1])
+                        initss.append(init[a])
                         a += 1
-                        f+=1  
+                        #f+=1  
             for l in range(len(initss)):
                 groups.append((sig[initss[l]:endss[l]]-means[s]))##
                 times.append(tempi[initss[l]:endss[l]])

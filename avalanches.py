@@ -7,7 +7,137 @@ from scipy.signal import find_peaks
 from scipy import signal
 from scipy.stats import percentileofscore
 
+def threshold2(sample1,means,stds,thres):
+    initshape = sample1.shape
+    if sample1.ndim > 2:
+        sample1 = sample1.reshape(sample1.shape[0],-1)
+        means = means.reshape(-1,)
+        stds = stds.reshape(-1,)
+        
+    if sample1.ndim == 1: # so this same code works even when considering a single time series
+        sample1 = sample1.reshape(sample1.shape[0],1,1)
+        means = means.reshape(1,1)
+        stds = stds.reshape(1,1)
+        
+    if sample1.shape[1] > sample1.shape[0]:
+         raise Exception('Error, the array must be transposed (first dimension should be time)')
 
+    sample2 = np.zeros(sample1.shape, dtype = int)
+
+    for s in range(sample1.shape[1]):
+        if stds[s]>0:
+            sig = sample1[:,s].reshape(-1)
+            stan = stds[s]
+            tempi = np.arange(0,len(sig),1)
+            prova =np.array((sig - means[s]) <= -thres*stan, dtype = float)
+            init = np.where(np.diff(prova)>0)[0]
+            end = np.where(np.diff(prova)<0)[0] +1 
+            if len(init) < len(end):
+                init = np.insert(init,0,0)
+
+            if len(end) < len(init):
+                end = np.append(end,len(sig))
+
+            #print(len(init), len(end))
+            groups = []
+            times = []
+            for l in range(len(init)):
+                groups.append(np.abs(sig[init[l]:end[l]]-means[s]))##
+                times.append(tempi[init[l]:end[l]])
+            #print(groups)
+            zeta = []
+            for m in range(len(groups)):
+                zeta.append(times[m][groups[m].tolist().index(max(groups[m]))])
+            sample2[zeta,s] = 1
+            
+    return sample2.reshape(initshape)
+
+
+def threshold3(sample1,means,stds,thres):
+    initshape = sample1.shape
+    if sample1.ndim > 2:
+        sample1 = sample1.reshape(sample1.shape[0],-1)
+        means = means.reshape(-1,)
+        stds = stds.reshape(-1,)
+        
+    if sample1.ndim == 1: # so this same code works even when considering a single time series
+        sample1 = sample1.reshape(sample1.shape[0],1,1)
+        means = means.reshape(1,1)
+        stds = stds.reshape(1,1)
+        
+    if sample1.shape[1] > sample1.shape[0]:
+         raise Exception('Error, the array must be transposed (first dimension should be time)')
+
+    sample2 = np.zeros(sample1.shape, dtype = int)
+
+    for s in range(sample1.shape[1]):
+        if stds[s]>0:
+            sig = sample1[:,s].reshape(-1)
+            stan = stds[s]
+            tempi = np.arange(0,len(sig),1)
+            prova =np.array((sig - means[s]) <= -thres*stan, dtype = float)
+            
+            changesign = np.diff(np.sign(sig[:]-means[s]))
+            
+            
+            #changesign1 = np.hstack((changesign1,0.))
+            
+
+            initsign = np.where((changesign)>0)[0]
+            endsign = np.where((changesign)<0)[0]
+
+            init = np.where(np.diff(prova)>0)[0]
+            end = np.where(np.diff(prova)<0)[0] + 1
+            #print(len(initsign) ==len(endsign))
+            #print(len(sig),len(initsign),len(init), len(end))
+            if len(init) < len(end):
+                init = np.insert(init,0,0)
+
+            if len(end) < len(init):
+                end = np.append(end,len(sig))
+
+            #print(init, end)
+            groups = []
+            times = []
+            
+            #intss = []
+            #endss = []
+            
+                        
+            initss = []
+            endss = []
+
+            a = 0
+            f = 0
+            k = 0
+            endss = []
+            initss = []
+            #g = 0 
+            while f < len(end):
+                if not len((set(np.arange(init[a], end[f],1)) & set(initsign[:]))):
+                    k+=1
+                    f+=1
+
+                else:
+                    if k> 0:
+                        endss.append(end[f])
+                        initss.append(init[a])
+                        a += k
+                        k = 0
+                        f+=1
+                    else:
+                        a += 1
+                        f+=1  
+            for l in range(len(initss)):
+                groups.append((sig[initss[l]:endss[l]]-means[s]))##
+                times.append(tempi[initss[l]:endss[l]])
+            zeta = []
+            for m in range(len(groups)):
+                zeta.append(times[m][groups[m].tolist().index(min(groups[m]))])
+            sample2[zeta,s] = 1
+            
+    return sample2.reshape(initshape)
+    
 def threshold(sample1,means,stds,thres,choose = "posneg", opz = "option1"):
     """ 
     Detects as events the points of maximum excursion over a threshold, considering either positive and negative excursions or only negative. if "option1" is selected, the one largest maximum between two crossings of the mean assigns the final event time.

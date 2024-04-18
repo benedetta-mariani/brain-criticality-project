@@ -30,8 +30,8 @@ def threshold2(sample1,means,stds,thres):
             stan = stds[s]
             tempi = np.arange(0,len(sig),1)
             prova =np.array((sig - means[s]) <= -thres*stan, dtype = float)
-            init = np.where(np.diff(prova)>0)[0]
-            end = np.where(np.diff(prova)<0)[0]
+            init = np.where(np.diff(prova)>0)[0] +1
+            end = np.where(np.diff(prova)<0)[0]+1
             if len(init) < len(end):
                 init = np.insert(init,0,0)
 
@@ -77,7 +77,7 @@ def threshold3(sample1,means,stds,thres):
             tempi = np.arange(0,len(sig),1)
             prova =np.array((sig - means[s]) <= -thres*stan, dtype = float)
             
-            changesign = np.diff(np.sign(sig[:]-means[s]))
+            changesign = np.diff(np.sign(sig[:]-means[s])) + 1
             
             
             #changesign1 = np.hstack((changesign1,0.))
@@ -86,8 +86,8 @@ def threshold3(sample1,means,stds,thres):
             initsign = np.where((changesign)>0)[0]
             endsign = np.where((changesign)<0)[0]
 
-            init = np.where(np.diff(prova)>0)[0]
-            end = np.where(np.diff(prova)<0)[0]
+            init = np.where(np.diff(prova)>0)[0] +1 #?
+            end = np.where(np.diff(prova)<0)[0] +1
             #print(len(initsign) ==len(endsign))
             #print(len(sig),len(initsign),len(init), len(end))
             if len(init) < len(end):
@@ -839,3 +839,61 @@ def Kuramoto_param(phases):
         raise Exception('Error, the array must be transposed (time should be the second dimension)')
     r = np.abs(np.nanmean(np.exp(1j*phases),axis=0))
     return r
+    
+def avalanche_finder(S_shape_):
+    """
+    computes avalanche profiles
+    """
+    where_spikes = np.where(S_shape_ != 0)
+    interspike_time = (where_spikes - np.roll(where_spikes,1))
+    interspike_time = np.delete(interspike_time,0) # remove the first element
+    mean_interspike_time = np.sum(interspike_time)/len(interspike_time)
+    mean_interspike_time = int(round(mean_interspike_time))
+    n = len(S_shape_)
+    # Now I modify the S_shape_ in order to applay the ney binning
+    rest = int(n%mean_interspike_time)
+    if rest == 0:
+        n_reduced = int(n/mean_interspike_time)
+    else:
+        n_reduced = int((n-rest)/mean_interspike_time)
+    S_shape = np.zeros(n_reduced)
+    delta = mean_interspike_time
+    for i in range(0, n-rest, mean_interspike_time):
+        j = int(i/mean_interspike_time)
+        S_shape[j] = S_shape_[i:i+delta].sum()
+    t_in = [] # timestep in which avalanche starts
+    t_fin = [] #                            ends
+    avalanche = False
+    for timestep in range(n_reduced):
+        if S_shape[timestep] != 0:
+            if avalanche == False:
+                t_in.append(timestep) # lists faster than array in this
+                avalanche = True
+        if S_shape[timestep] == 0 and avalanche == True:
+            t_fin.append( timestep ) 
+            avalanche = False
+    if len(t_in) != len(t_fin):
+        t_in.pop(-1)
+        # convert them into arrays for efficiency purposes
+    t_in = np.array(t_in)
+    t_fin = np.array(t_fin)
+    sizes = []
+    for i in range(len(t_in)):
+        if S_shape[t_in[i]:t_fin[i]].sum() == 0: print("ERROR: zeros inside sizes!") # control
+        sizes.append( S_shape[t_in[i]:t_fin[i]].sum() )
+    durations = np.array(t_fin - t_in)  # number of bins
+    duration_uni = np.unique(durations).astype(int) # uniques durations of avalanches
+    shape_mean = [] # mean temporal shapes
+    frequencies = []
+    dur = duration_uni[:]
+    for d in dur:
+        shape_temp = np.zeros(d)
+        counter = 0
+        for i in range(len(t_in)):
+            if t_fin[i] - t_in[i] == d:
+                shape_temp = shape_temp + S_shape[t_in[i]:t_fin[i]]
+                counter += 1
+        shape_mean += [shape_temp/counter]
+        frequencies.append(counter)
+    shape_mean = np.array(shape_mean)
+    return sizes, durations, S_shape,shape_mean, frequencies

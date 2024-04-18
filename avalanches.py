@@ -77,14 +77,14 @@ def threshold3(sample1,means,stds,thres):
             tempi = np.arange(0,len(sig),1)
             prova =np.array((sig - means[s]) <= -thres*stan, dtype = float)
             
-            changesign = np.diff(np.sign(sig[:]-means[s])) + 1
+            changesign = np.diff(np.sign(sig[:]-means[s]))
             
             
             #changesign1 = np.hstack((changesign1,0.))
             
 
-            initsign = np.where((changesign)>0)[0]
-            endsign = np.where((changesign)<0)[0]
+            initsign = np.where((changesign)>0)[0] + 1
+            endsign = np.where((changesign)<0)[0] + 1
 
             init = np.where(np.diff(prova)>0)[0] +1 #?
             end = np.where(np.diff(prova)<0)[0] +1

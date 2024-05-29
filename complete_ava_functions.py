@@ -12,11 +12,7 @@ from scipy.signal import find_peaks
 from scipy import signal
 from scipy.stats import percentileofscore
 
-theta: is the threshold
-
-#The trials of all babies in silence X are contained in the trial_silenceX folder where each column is a good channel series 
-
-def valanghe(data,interv,dt =1):
+def compute_avalanches(data,interv,dt =1):
     final_tt = data.T
     ev = np.sum(final_tt,0)
 

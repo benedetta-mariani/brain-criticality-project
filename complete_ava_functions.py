@@ -169,8 +169,8 @@ def thresholdnuova(sample1,means,stds,thres):
             stan = stds[s]
             tempi = np.arange(0,len(sig),1)
             prova =np.array((sig - means[s]) <= -thres*stan, dtype = float)
-            init = np.where(np.diff(prova)>0)[0]
-            end = np.where(np.diff(prova)<0)[0] 
+            init = np.where(np.diff(prova)>0)[0] + 1
+            end = np.where(np.diff(prova)<0)[0] + 1
             if len(init) < len(end):
                 init = np.insert(init,0,0)
 
@@ -238,11 +238,11 @@ def thresholdnuova2(sample1,means,stds,thres):
             #changesign1 = np.hstack((changesign1,0.))
             
 
-            initsign = np.where((changesign)<0)[0]
-            endsign = np.where((changesign)>0)[0]
+            initsign = np.where((changesign)<0)[0] + 1
+            endsign = np.where((changesign)>0)[0] + 1
 
-            init = np.where(np.diff(prova)>0)[0]
-            end = np.where(np.diff(prova)<0)[0]
+            init = np.where(np.diff(prova)>0)[0] + 1
+            end = np.where(np.diff(prova)<0)[0] + 1
             #print(len(initsign) ==len(endsign))
             #print(len(sig),len(initsign),len(init), len(end))
             if len(init) < len(end):

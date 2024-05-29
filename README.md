@@ -1,5 +1,5 @@
-# Avalanches.py 
-is a short module to detect events in time series of neural activity, plot raster plots, calculate avalanches statistics and calculate other statistics such as synchronization measures.
+# avalanches.py and complete_ava_functions.py
+are short modules to detect events in time series of neural activity, plot raster plots, calculate avalanches statistics (avalanches sizes and durations distributions, avalanches porfiles, interavalanche times distributions) and calculate other statistics such as synchronization measures.
 
 
 ## Setup:

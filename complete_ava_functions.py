@@ -578,48 +578,58 @@ def scaling(sizes, durations,  lim1 = 4 , lim2 = 4,ax = None, tau = "default", e
         ax.errorbar(a,b,yerr = c, fmt = 'o', color = blues[29],markersize = 3.5,barsabove = False,capsize = 3, elinewidth = 3,capthick = 1)
     return np.asarray([pred, errpred,fit,errfit,a,b,c])
 
-
-def RasterPlot(sample, av, ticks,ax, color, alpha):
+def returnbin(n,interv):
+    v = []
+    if len(n)%interv > 0:
+        add = (int(len(n)/interv) + 1)* interv - len(n)
+        n = n.tolist()
+        for i in range(add):
+            n = n + [0]
+            
+    n = np.asarray(n).reshape(int(len(n)/interv), interv)
+    for z in range(len(n)):
+        if np.any(n[z]):
+            for i in range(len(n[z])):
+                v.append(1)
+        else:
+            for i in range(len(n[z])):
+                v.append(0)
+    return v
+def RasterPlot(sample, av, fs = 500,ax = None, av_color = 'gray',
+               nsize = 1.5, alpha = 0.3):
     """
     Parameters
     --------
     sample : Array of discretized data. Dimensions : temporal dim x spatial dim1 (x spatial dim2)
     av : width of temporal bin 
-    
     Returns
     --------
     Plots the Raster Plots and the detected avalanches (an avalanche is preceded and followed by white bins)
-    
     """
-    
-    sample = sample.reshape(sample.shape[0],-1) 
-    s = binn(events(sample),av)
-    times = np.asarray([av*i for i in range(len(s)+1)])
-    s = np.asarray(s, dtype = bool)
-    #color = cm.Reds_r(np.linspace(0.8,1,10))
+    if ax == None:
+        fig = plt.figure()
+        ax = fig.add_subplot(1,1,1)
 
-    x= np.arange(0,sample.shape[1])
-    for i in range(len(times)-1):
-  
-        if s[i]:
-            plt.plot([times[i] for r in range(len(x))],x, color = 'red', linewidth = 0.000001)
-            plt.fill_betweenx(x,np.asarray([times[i] for r in range(len(x))]),np.asarray([times[i+1] for r in range(len(x))]), color = color, alpha = alpha)
-        #else:
-            #plt.plot([times[i] for r in range(len(x))],x, '-', color = 'white', alpha = 0.3)
-            #plt.fill_betweenx(x,np.asarray([times[i] for r in range(len(x))]),np.asarray([times[i+1] for r in range(len(x))]), color = 'white')
+    s = returnbin(np.sum(final_t,1),av)
+    print(np.array(s).shape, final_t.shape)
+    if s[0] == 1:
+        start_av = True
+    else:
+        start_av = False
+    #print(np.where(np.diff(s) != 0)[0].shape)
+    xtime = np.arange(0,len(final_t),1)/fs
+    print(xtime.shape), print(len(s))
+    s = xtime[(np.where(np.diff(s) != 0)[0]+1)]
+    if start_av:
+        s = np.concatenate([[0], s])
+    if s.size % 2 != 0:
+        s = np.concatenate([s, [s[-1] + av]])
 
-    
+    for sval in s.reshape(-1, 2):
+        ax.axvspan(sval[0], sval[1], 0.01, 0.99, color = av_color, alpha = alpha, zorder = -10)
     for j in range(sample.shape[1]):
         idx = np.where(sample[:,j]> 0)[0]
-        plt.plot(idx,[j for i in range(len(idx))], '|',color = black, markersize = 1.5)
-        
-    #plt.xlabel('Temporal frame')
-    plt.ylabel(r'Unit')
-    ax.spines['bottom'].set_color('None')
-    plt.xticks(ticks)
-    plt.yticks()
-    
-    
+        ax.plot(xtime[idx], np.ones(len(idx))*j, '|', color = 'black', markersize = nsize)
 
 
 def avalanche_finder(S_shape_, coef):

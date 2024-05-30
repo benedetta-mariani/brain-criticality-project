@@ -12,7 +12,12 @@ from scipy.signal import find_peaks
 from scipy import signal
 from scipy.stats import percentileofscore
 
-def compute_avalanches(data,interv,dt =1):
+def compute_avalanches(data,interv,fs,dt =1):
+    
+    """
+    data: discretized array with shape: time x # of channels
+    """
+    
     final_tt = data.T
     ev = np.sum(final_tt,0)
 
@@ -25,8 +30,6 @@ def compute_avalanches(data,interv,dt =1):
     ev = np.asarray(ev).reshape(int(len(ev)/interv), interv)
     global_signal =np.sum(ev,axis = 1)
     new= np.array(global_signal, dtype = bool)
-    ##ev.shape, new.shape, mean_interspike_time
-    #print(np.array(new, dtype= int)[:15])
     final_t = np.array(new, dtype = float)
     
     av_indice_start = np.where((final_t[1:] - final_t[:-1])>0)[0]  + 1# These are the indices where an avalanche begins
@@ -57,8 +60,7 @@ def compute_avalanches(data,interv,dt =1):
                
         
    
-    t=np.arange(0,len(final_t)*interv/25000,0.00004)
-    print(t[-1])
+    t=np.arange(0,len(final_t)*interv/fs,1/fs)
     avalanche_sizes = []
     avalanche_dur = []
 
@@ -70,7 +72,10 @@ def compute_avalanches(data,interv,dt =1):
         avalanche_dur.append((t[av_indice_end[s]]- t[av_indice_start[s]])/dt)##
     return np.array(avalanche_sizes),np.array(avalanche_dur)
 
-def intertimes(data,interv,dt =1):
+def intertimes(data,interv,fs,dt =1):
+    """
+    data: discretized array with shape: time x # of channels
+    """
     final_tt = data.T
     ev = np.array(np.sum(final_tt,0), dtype=bool)
     if len(ev)%interv > 0:
@@ -83,7 +88,6 @@ def intertimes(data,interv,dt =1):
     ev = np.asarray(ev).reshape(int(len(ev)/interv), interv)
     new = np.array(np.sum(ev,axis = 1),dtype = bool)
     ##ev.shape, new.shape, mean_interspike_time
-    #print(np.array(new, dtype= int)[:15])
     final_t = np.array(new, dtype = float)
     
     #The key part
@@ -115,21 +119,20 @@ def intertimes(data,interv,dt =1):
                
         
    
-    t=np.arange(0,len(final_t)*interv/25000,0.00004)
-    #print(t[-1])
-    #avalanche_sizes = []
+    t=np.arange(0,len(final_t)*interv/fs,fs)
+
+  
     avalanche_dur = []
 
     for s in range(len(av_indice_start)):
         if len(av_indice_start) != len(av_indice_end):
             print('Error, they must be of the same length')
             break
-        #avalanche_sizes.append(np.sum(global_signal[av_indice_start[s]:av_indice_end[s]]))
-        avalanche_dur.append((t[av_indice_end[s]]- t[av_indice_start[s]])/dt)##??? giusto così
+        avalanche_dur.append((t[av_indice_end[s]]- t[av_indice_start[s]])/dt)
         
     return np.array(avalanche_dur)
 
-def thresholdnuova(sample1,means,stds,thres):
+def threshold_data(sample1,means,stds,thres):
     """ 
     Detects as events the points of maximum excursion over a threshold, considering either positive and negative excursions or only negative. if "option1" is selected, the one largest maximum between two crossings of the mean assigns the final event time.
     For a faster thresholding use the function below findpeaks.
@@ -191,7 +194,7 @@ def thresholdnuova(sample1,means,stds,thres):
             
     return sample2.reshape(initshape)
 
-def thresholdnuova2(sample1,means,stds,thres):
+def threshold_data_2(sample1,means,stds,thres):
     """ 
     Detects as events the points of maximum excursion over a threshold, considering either positive and negative excursions or only negative. if "option1" is selected, the one largest maximum between two crossings of the mean assigns the final event time.
     For a faster thresholding use the function below findpeaks.
@@ -620,6 +623,9 @@ def RasterPlot(sample, av, ticks,ax, color, alpha):
 
 
 def avalanche_finder(S_shape_, coef):
+    """
+    returns avalanche sizes, durations + avalanches shapes
+    """
     where_spikes = np.where(S_shape_ != 0)
     interspike_time = (where_spikes - np.roll(where_spikes,1))
     interspike_time = np.delete(interspike_time,0) # remove the first element

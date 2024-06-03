@@ -28,7 +28,7 @@ sizes, lifetimes = main(dataset,interv)
 ```
    where ```dataset``` is a tri/bidimensional array (shape = temporal dim x spatial dims) of discretized signals and ```interv``` is the width of the chosen temporal bin to bin the data.
    
-- Detailed instructions in the tutorial notebook
+- Detailed instructions in the tutorial .py file
 
 # OrnsteinUhlenbeck.C
 is a C++ (ROOT) implementation of a multivariate Ornstein Uhlenbeck process on a network with a diffusion coefficient that varies in time (here accordingly to a thresholded Ornstein Uhlenbeck process), as a minimal model for neural activity. The process at node i evolves according to the equation:

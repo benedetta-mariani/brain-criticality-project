@@ -33,7 +33,7 @@ sizes, lifetimes = main(dataset,interv)
 # OrnsteinUhlenbeck.C
 is a C++ (ROOT) implementation of a multivariate Ornstein Uhlenbeck process on a network with a diffusion coefficient that varies in time (here accordingly to a thresholded Ornstein Uhlenbeck process), as a minimal model for neural activity. The process at node i evolves according to the equation:
 
-![image](https://github.com/benedetta-mariani/Avalanches-in-rat-barrel-cortex/blob/master/image.jpg)
+![image](https://github.com/benedetta-mariani/brain-criticality-project/blob/master/c%2B%2B%20files/image.jpg)
 
 where a<sub>ij</sub> is the synaptic strength between unit i and j, i.e. the element of the adjacency matrix. 
 

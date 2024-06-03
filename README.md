@@ -78,6 +78,9 @@ with open('output.csv') as csv_file:
             
 ```
 
+# Branchingprocess.C 
+
+is a C++ (ROOT) implementation of a Branching process with two branches per node. Avalanches sizes and generations are stored
 
 
 
